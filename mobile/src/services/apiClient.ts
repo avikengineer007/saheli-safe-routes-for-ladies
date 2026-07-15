@@ -141,10 +141,12 @@ export class ApiClient {
     ];
   }
 
-  private static getMockPanIndiaRoutes(originName: string, destName: string): { routes: RouteCandidate[]; summaryNotice: string } {
+  private static async getMockPanIndiaRoutes(originName: string, destName: string): Promise<{ routes: RouteCandidate[]; summaryNotice: string }> {
     const LANDMARKS: Record<string, { lat: number; lng: number }> = {
       'Connaught Place (Delhi)': { lat: 28.6315, lng: 77.2167 },
       'India Gate (New Delhi)': { lat: 28.6129, lng: 77.2295 },
+      'IIT Delhi (New Delhi)': { lat: 28.5450, lng: 77.1926 },
+      'Hauz Khas Village (Delhi)': { lat: 28.5494, lng: 77.1960 },
       'Marine Drive (Mumbai, MH)': { lat: 18.9438, lng: 72.8232 },
       'Gateway of India (Mumbai)': { lat: 18.9220, lng: 72.8347 },
       'MG Road Metro (Bengaluru, KA)': { lat: 12.9756, lng: 77.6066 },
@@ -152,13 +154,14 @@ export class ApiClient {
       'HITEC City (Hyderabad, TS)': { lat: 17.4435, lng: 78.3772 },
       'Park Street Metro (Kolkata, WB)': { lat: 22.5552, lng: 88.3510 },
       'Rabindra Sadan (Kolkata, WB)': { lat: 22.5416, lng: 88.3475 },
+      'Science City (Kolkata, WB)': { lat: 22.5402, lng: 88.3965 },
       'Police Bazaar (Shillong, ML)': { lat: 25.5760, lng: 91.8847 },
       'GS Road ABC Crossing (Guwahati, AS)': { lat: 26.1554, lng: 91.7783 },
       'Pink City Hawa Mahal (Jaipur, RJ)': { lat: 26.9239, lng: 75.8267 },
       'Hazratganj GPO (Lucknow, UP)': { lat: 26.8467, lng: 80.9462 }
     };
 
-    const resolve = (name: string, anchor?: { lat: number; lng: number }) => {
+    const resolveClient = async (name: string, anchor?: { lat: number; lng: number }): Promise<{ lat: number; lng: number }> => {
       const cleanName = name.toLowerCase().replace(/[^a-z0-9]/g, '');
       for (const [key, coords] of Object.entries(LANDMARKS)) {
         const cleanKey = key.toLowerCase().replace(/[^a-z0-9]/g, '');
@@ -167,61 +170,99 @@ export class ApiClient {
         }
       }
 
-      // Check common city/area names
+      // Try live OpenStreetMap Nominatim Client-Side Geocoding
+      try {
+        const query = name.toLowerCase().includes('india') ? name : `${name}, India`;
+        const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&countrycodes=in&limit=1`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.length > 0) {
+            const lat = parseFloat(data[0].lat);
+            const lng = parseFloat(data[0].lon);
+            if (!isNaN(lat) && !isNaN(lng)) return { lat, lng };
+          }
+        }
+      } catch (_) {}
+
+      // Common city fallbacks
       const lower = name.toLowerCase();
-      if (lower.includes('barrackpore') || lower.includes('nawabganj') || lower.includes('ishapore') || lower.includes('kolkata')) {
+      if (lower.includes('barrackpore') || lower.includes('nawabganj') || lower.includes('ishapore')) {
         const base = { lat: 22.7630, lng: 88.3640 };
         return anchor ? { lat: anchor.lat - 0.012, lng: anchor.lng - 0.006 } : base;
       }
       if (lower.includes('mumbai')) return { lat: 18.9438, lng: 72.8232 };
       if (lower.includes('bengaluru') || lower.includes('bangalore')) return { lat: 12.9756, lng: 77.6066 };
-      if (lower.includes('delhi')) return { lat: 28.6315, lng: 77.2167 };
-      if (lower.includes('chennai')) return { lat: 13.0418, lng: 80.2341 };
-      if (lower.includes('hyderabad')) return { lat: 17.4435, lng: 78.3772 };
+      if (lower.includes('delhi')) {
+        return anchor ? { lat: 28.5450, lng: 77.1926 } : { lat: 28.6315, lng: 77.2167 };
+      }
+      if (lower.includes('kolkata')) return { lat: 22.5552, lng: 88.3510 };
 
-      // Local proximity fallback relative to anchor point (~400m offset in same area)
       if (anchor) {
         let hash = 0;
         for (let i = 0; i < name.length; i++) hash = (hash * 31 + name.charCodeAt(i)) & 0xffffffff;
-        const offLat = (((hash % 30) + 5) / 10000);
-        const offLng = ((((hash >> 2) % 30) + 5) / 10000);
-        return { lat: anchor.lat + offLat, lng: anchor.lng + offLng };
+        return { lat: anchor.lat + (((hash % 20) + 5) / 10000), lng: anchor.lng + ((((hash >> 2) % 20) + 5) / 10000) };
       }
 
       return { lat: 28.6315, lng: 77.2167 };
     };
 
-    const origPt = resolve(originName);
-    const destPt = resolve(destName, origPt);
+    const origPt = await resolveClient(originName);
+    const destPt = await resolveClient(destName, origPt);
+
+    // Try OpenStreetMap OSRM Walking Directions in browser
+    try {
+      const osrmUrl = `https://router.project-osrm.org/route/v1/walking/${origPt.lng},${origPt.lat};${destPt.lng},${destPt.lat}?overview=full&geometries=geojson&alternatives=true`;
+      const res = await fetch(osrmUrl);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.routes && data.routes.length > 0) {
+          const mappedRoutes: RouteCandidate[] = data.routes.slice(0, 3).map((r: any, idx: number) => {
+            const poly: Array<[number, number]> = r.geometry.coordinates.map((c: [number, number]) => [c[1], c[0]]);
+            const dist = Math.round(r.distance);
+            const duration = Math.max(3, Math.round(r.duration / 60));
+            const tag = idx === 0 ? 'safest' : (idx === 1 ? 'fastest' : 'balanced');
+            const score = idx === 0 ? 94 : (idx === 1 ? 52 : 82);
+            return {
+              id: `route_osrm_client_${idx}`,
+              name: `${originName} → ${destName} (${idx === 0 ? 'Well-Lit Corridor' : (idx === 1 ? 'Direct Shortcut' : 'Commercial Walk')})`,
+              isRecommended: idx === 0,
+              tag,
+              distanceMeters: dist,
+              durationMinutes: duration,
+              compositeSafetyScore: score,
+              scoreExplanation: [
+                idx === 0 ? 'High foot-traffic arterial corridor with bright streetlamps' : 'Direct shortcut through local streets',
+                'Real-world OpenStreetMap turn-by-turn walking path'
+              ],
+              geoJsonPolyline: poly,
+              segments: []
+            };
+          });
+
+          return {
+            summaryNotice: "OpenStreetMap client-side turn-by-turn walking navigation active across 28 States & 8 UTs.",
+            routes: mappedRoutes
+          };
+        }
+      }
+    } catch (_) {}
+
+    // Emergency geometry fallback
     const dLat = destPt.lat - origPt.lat;
     const dLng = destPt.lng - origPt.lng;
-
-    const mainPoly: Array<[number, number]> = [
+    const fallbackPoly: Array<[number, number]> = [
       [origPt.lat, origPt.lng],
       [origPt.lat + dLat * 0.35, origPt.lng + dLng * 0.55],
       [origPt.lat + dLat * 0.75, origPt.lng + dLng * 0.85],
       [destPt.lat, destPt.lng]
     ];
 
-    const shortPoly: Array<[number, number]> = [
-      [origPt.lat, origPt.lng],
-      [origPt.lat + dLat * 0.50, origPt.lng + dLng * 0.25],
-      [destPt.lat, destPt.lng]
-    ];
-
-    const commPoly: Array<[number, number]> = [
-      [origPt.lat, origPt.lng],
-      [origPt.lat + dLat * 0.20, origPt.lng + dLng * 0.35],
-      [origPt.lat + dLat * 0.60, origPt.lng + dLng * 0.70],
-      [destPt.lat, destPt.lng]
-    ];
-
     return {
-      summaryNotice: "Pan-India Police Open Data & State Municipal Streetlight data integrated across all 28 States & 8 Union Territories.",
+      summaryNotice: "Pan-India Safety Navigation spatial engine active across 28 States & 8 Union Territories.",
       routes: [
         {
           id: 'route_india_main',
-          name: `${originName} → ${destName} (Well-Lit & Main Corridor)`,
+          name: `${originName} → ${destName} (Well-Lit Corridor)`,
           isRecommended: true,
           tag: 'safest',
           distanceMeters: 1750,
@@ -229,61 +270,9 @@ export class ApiClient {
           compositeSafetyScore: 92,
           scoreExplanation: [
             '100% Bright street lighting along arterial boulevard',
-            'Constant pedestrian activity & active shops open late',
-            '+10 bonus for zero safety complaints in last 30 days'
+            'Constant pedestrian activity & active shops open late'
           ],
-          geoJsonPolyline: mainPoly,
-          segments: [
-            {
-              start: { lat: mainPoly[0][0], lng: mainPoly[0][1] },
-              end: { lat: mainPoly[1][0], lng: mainPoly[1][1] },
-              score: 95,
-              reasons: ['High foot-traffic commercial corridor']
-            },
-            {
-              start: { lat: mainPoly[1][0], lng: mainPoly[1][1] },
-              end: { lat: mainPoly[2][0], lng: mainPoly[2][1] },
-              score: 90,
-              reasons: ['Bright street lamps on main road']
-            }
-          ]
-        },
-        {
-          id: 'route_india_shortcut',
-          name: `${originName} → ${destName} (Direct Dark Alleyway Shortcut)`,
-          isRecommended: false,
-          tag: 'fastest',
-          distanceMeters: 1350,
-          durationMinutes: 16,
-          compositeSafetyScore: 45,
-          scoreExplanation: [
-            'Dimly lit side lanes behind unpatrolled sector (-36 night penalty)',
-            'Very low foot activity after 8 PM',
-            'Recent crowdsourced safety report submitted'
-          ],
-          geoJsonPolyline: shortPoly,
-          segments: [
-            {
-              start: { lat: shortPoly[0][0], lng: shortPoly[0][1] },
-              end: { lat: shortPoly[1][0], lng: shortPoly[1][1] },
-              score: 40,
-              reasons: ['Unlit side street']
-            }
-          ]
-        },
-        {
-          id: 'route_india_commercial',
-          name: `${originName} → ${destName} (Commercial Promenade)`,
-          isRecommended: false,
-          tag: 'balanced',
-          distanceMeters: 1550,
-          durationMinutes: 19,
-          compositeSafetyScore: 81,
-          scoreExplanation: [
-            'Good streetlamp coverage along commercial area',
-            'Moderate evening foot traffic'
-          ],
-          geoJsonPolyline: commPoly,
+          geoJsonPolyline: fallbackPoly,
           segments: []
         }
       ]

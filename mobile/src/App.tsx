@@ -71,9 +71,10 @@ const MainAppContent: React.FC = () => {
     }
   }, []);
 
-  // Initial heatmap data load on mount
+  // Initial heatmap and default route calculation on mount
   useEffect(() => {
     loadHeatmapData();
+    handleCalculateRoutes('Connaught Place (Delhi)', 'India Gate (New Delhi)', 25);
   }, []);
 
   const loadHeatmapData = async () => {
