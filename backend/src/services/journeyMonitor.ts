@@ -167,7 +167,8 @@ export class JourneyMonitorService {
   public static triggerSOS(
     journey: ActiveJourneyState,
     userName: string,
-    currentLocation: { lat: number; lng: number }
+    currentLocation: { lat: number; lng: number },
+    contactPhone?: string
   ): { emergencyCallNumber: string; smsPayloads: string[] } {
     journey.status = 'sos_triggered';
 
@@ -180,8 +181,9 @@ export class JourneyMonitorService {
       message: smsMessage
     });
 
-    // Dispatch SMS asynchronously
-    this.dispatchSMS('9876543210', smsMessage).catch(err => console.warn('[SOS SMS Dispatch Error]:', err));
+    // Dispatch SMS asynchronously to the selected contact phone number
+    const targetPhone = contactPhone || '9876543210';
+    this.dispatchSMS(targetPhone, smsMessage).catch(err => console.warn('[SOS SMS Dispatch Error]:', err));
 
     return {
       emergencyCallNumber: '112', // Standard emergency response number in India

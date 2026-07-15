@@ -116,14 +116,14 @@ exports.apiRouter.post('/journey/ping', (req, res) => {
  */
 exports.apiRouter.post('/journey/sos', (req, res) => {
     try {
-        const { journeyId, userName, currentLocation } = req.body;
+        const { journeyId, userName, currentLocation, contactPhone } = req.body;
         let journey = activeJourneysMap.get(journeyId);
         if (!journey) {
             journey = {
                 id: journeyId || 'jny_sos_adhoc',
                 userId: 'user_demo_1',
                 status: 'active',
-                routePolyline: [[currentLocation.lat, currentLocation.lng]],
+                routePolyline: [[currentLocation?.lat || 22.5552, currentLocation?.lng || 88.3510]],
                 startedAt: new Date(),
                 etaMinutes: 15,
                 consecutiveOffRoutePings: 0,
@@ -131,7 +131,7 @@ exports.apiRouter.post('/journey/sos', (req, res) => {
             };
             activeJourneysMap.set(journey.id, journey);
         }
-        const sosPayload = journeyMonitor_1.JourneyMonitorService.triggerSOS(journey, userName || 'SAHELI User', currentLocation || { lat: 28.6139, lng: 77.2090 });
+        const sosPayload = journeyMonitor_1.JourneyMonitorService.triggerSOS(journey, userName || 'SAHELI User', currentLocation || { lat: 22.5552, lng: 88.3510 }, contactPhone);
         res.json({
             success: true,
             status: 'sos_triggered',

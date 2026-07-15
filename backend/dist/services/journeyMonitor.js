@@ -124,7 +124,7 @@ class JourneyMonitorService {
     /**
      * Executes deterministic SOS Trigger Flow
      */
-    static triggerSOS(journey, userName, currentLocation) {
+    static triggerSOS(journey, userName, currentLocation, contactPhone) {
         journey.status = 'sos_triggered';
         const liveLink = `https://saheli-safe.app/track/${journey.id}`;
         const smsMessage = `[SAHELI EMERGENCY SOS] ${userName} triggered SOS! Live location: ${currentLocation.lat.toFixed(5)}, ${currentLocation.lng.toFixed(5)}. Tracking: ${liveLink}`;
@@ -133,8 +133,9 @@ class JourneyMonitorService {
             type: 'SOS_TRIGGERED',
             message: smsMessage
         });
-        // Dispatch SMS asynchronously
-        this.dispatchSMS('9876543210', smsMessage).catch(err => console.warn('[SOS SMS Dispatch Error]:', err));
+        // Dispatch SMS asynchronously to the selected contact phone number
+        const targetPhone = contactPhone || '9876543210';
+        this.dispatchSMS(targetPhone, smsMessage).catch(err => console.warn('[SOS SMS Dispatch Error]:', err));
         return {
             emergencyCallNumber: '112', // Standard emergency response number in India
             smsPayloads: [smsMessage]
