@@ -1,0 +1,9 @@
+node_modules
+dist
+.env
+*.log
+.DS_Store
+mobile/dist
+mobile/node_modules
+backend/dist
+backend/node_modules
