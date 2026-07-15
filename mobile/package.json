@@ -8,6 +8,8 @@
     "dev": "vite --host",
     "web": "vite --host",
     "build": "vite build",
+    "build:apk": "vite build && cap sync",
+    "cap:sync": "cap sync",
     "preview": "vite preview"
   },
   "dependencies": {
@@ -16,6 +18,9 @@
     "react-dom": "^18.3.1"
   },
   "devDependencies": {
+    "@capacitor/android": "^8.4.2",
+    "@capacitor/cli": "^8.4.2",
+    "@capacitor/core": "^8.4.2",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
     "@vitejs/plugin-react": "^4.3.1",
