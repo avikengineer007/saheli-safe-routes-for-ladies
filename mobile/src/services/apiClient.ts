@@ -13,23 +13,33 @@ export class ApiClient {
     const originName = typeof origin === 'string' ? origin : (origin.name || 'Origin');
     const destName = typeof destination === 'string' ? destination : (destination.name || 'Destination');
 
-    // 1. Try Google Maps DirectionsService directly in browser if SDK loaded
+    // 1. FIRST: Try Google Maps DirectionsService directly in browser (official road-snapped routes)
     const googleRes = await this.fetchGoogleDirectionsBrowser(originName, destName);
     if (googleRes && googleRes.routes.length > 0) {
+      console.log('[SAHELI] ✅ Using official Google Maps walking directions');
       return googleRes;
     }
 
+    // 2. SECOND: Try client-side OSRM (OpenStreetMap walking router)
+    // NOTE: Skipping backend call (saheli-backend-api.onrender.com) as it returns stale data
+    const osrmRes = await this.getMockPanIndiaRoutes(originName, destName);
+    if (osrmRes && osrmRes.routes.length > 0) {
+      return osrmRes;
+    }
+
+    // 3. LAST RESORT: Try backend (may have stale data)
     try {
       const res = await fetch(`${API_BASE_URL}/routes/plan`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ origin, destination, originName, destName, maxDetourBudgetPercent })
+        body: JSON.stringify({ origin, destination, originName, destName, maxDetourBudgetPercent }),
+        signal: AbortSignal.timeout(5000)
       });
       if (res.ok) {
         return await res.json();
       }
     } catch (err) {
-      console.warn('[SAHELI API] Connecting via fallback Pan-India spatial router client');
+      console.warn('[SAHELI] Backend unavailable, using client-side router');
     }
 
     return this.getMockPanIndiaRoutes(originName, destName);
