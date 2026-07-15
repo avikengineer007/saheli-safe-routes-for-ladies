@@ -71,9 +71,13 @@ export const RoutePlannerView: React.FC<RoutePlannerViewProps> = ({
 
   React.useEffect(() => {
     if (userLocation && !hasInitializedLocation) {
-      setOriginText('My Current Location');
-      setOriginCoords(userLocation);
-      setHasInitializedLocation(true);
+      // Check if userLocation is not the hardcoded placeholder coordinate
+      const isPlaceholder = userLocation.lat === 28.6315 && userLocation.lng === 77.2167;
+      if (!isPlaceholder) {
+        setOriginText('My Current Location');
+        setOriginCoords(userLocation);
+        setHasInitializedLocation(true);
+      }
     }
   }, [userLocation, hasInitializedLocation]);
 
