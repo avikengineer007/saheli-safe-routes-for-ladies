@@ -1,5 +1,12 @@
 import { RouteCandidate, ActiveJourney, HeatmapPoint } from '../types';
 
+// Declare global window.google for Google Maps SDK loaded via <script> tag
+declare global {
+  interface Window {
+    google: any;
+  }
+}
+
 const API_BASE_URL = typeof window !== 'undefined' && window.location.hostname === 'localhost'
   ? 'http://localhost:4000/api'
   : 'https://saheli-backend-api.onrender.com/api';
