@@ -158,19 +158,41 @@ export class ApiClient {
       'Hazratganj GPO (Lucknow, UP)': { lat: 26.8467, lng: 80.9462 }
     };
 
-    const resolve = (name: string, fallbackLat: number, fallbackLng: number) => {
-      const match = Object.keys(LANDMARKS).find(k => k.toLowerCase().includes(name.toLowerCase()) || name.toLowerCase().includes(k.toLowerCase()));
-      if (match) return LANDMARKS[match];
-      let hash = 0;
-      for (let i = 0; i < name.length; i++) hash = (hash * 31 + name.charCodeAt(i)) & 0xffffffff;
-      return {
-        lat: 12.0000 + (Math.abs(hash % 20000) / 1000),
-        lng: 73.0000 + (Math.abs((hash >> 4) % 20000) / 1000)
-      };
+    const resolve = (name: string, anchor?: { lat: number; lng: number }) => {
+      const cleanName = name.toLowerCase().replace(/[^a-z0-9]/g, '');
+      for (const [key, coords] of Object.entries(LANDMARKS)) {
+        const cleanKey = key.toLowerCase().replace(/[^a-z0-9]/g, '');
+        if (cleanKey.includes(cleanName) || cleanName.includes(cleanKey)) {
+          return coords;
+        }
+      }
+
+      // Check common city/area names
+      const lower = name.toLowerCase();
+      if (lower.includes('barrackpore') || lower.includes('nawabganj') || lower.includes('ishapore') || lower.includes('kolkata')) {
+        const base = { lat: 22.7630, lng: 88.3640 };
+        return anchor ? { lat: anchor.lat - 0.012, lng: anchor.lng - 0.006 } : base;
+      }
+      if (lower.includes('mumbai')) return { lat: 18.9438, lng: 72.8232 };
+      if (lower.includes('bengaluru') || lower.includes('bangalore')) return { lat: 12.9756, lng: 77.6066 };
+      if (lower.includes('delhi')) return { lat: 28.6315, lng: 77.2167 };
+      if (lower.includes('chennai')) return { lat: 13.0418, lng: 80.2341 };
+      if (lower.includes('hyderabad')) return { lat: 17.4435, lng: 78.3772 };
+
+      // Local proximity fallback relative to anchor point (~400m offset in same area)
+      if (anchor) {
+        let hash = 0;
+        for (let i = 0; i < name.length; i++) hash = (hash * 31 + name.charCodeAt(i)) & 0xffffffff;
+        const offLat = (((hash % 30) + 5) / 10000);
+        const offLng = ((((hash >> 2) % 30) + 5) / 10000);
+        return { lat: anchor.lat + offLat, lng: anchor.lng + offLng };
+      }
+
+      return { lat: 28.6315, lng: 77.2167 };
     };
 
-    const origPt = resolve(originName, 28.6315, 77.2167);
-    const destPt = resolve(destName, 28.6129, 77.2295);
+    const origPt = resolve(originName);
+    const destPt = resolve(destName, origPt);
     const dLat = destPt.lat - origPt.lat;
     const dLng = destPt.lng - origPt.lng;
 

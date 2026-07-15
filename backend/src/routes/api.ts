@@ -27,8 +27,8 @@ apiRouter.post('/routes/plan', async (req: Request, res: Response) => {
   try {
     const { origin, destination, originName, destName, maxDetourBudgetPercent } = req.body;
     
-    const resolvedOrigin = RoutingService.resolveLocation(origin || originName, originName || 'Park Street Metro');
-    const resolvedDest = RoutingService.resolveLocation(destination || destName, destName || 'Rabindra Sadan');
+    const resolvedOrigin = await RoutingService.resolveLocation(origin || originName, originName || 'Connaught Place (Delhi)');
+    const resolvedDest = await RoutingService.resolveLocation(destination || destName, destName || 'India Gate (New Delhi)', resolvedOrigin);
 
     const result = await RoutingService.calculateSafeRoutes(
       resolvedOrigin,
