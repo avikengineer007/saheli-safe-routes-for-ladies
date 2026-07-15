@@ -37,7 +37,7 @@ export const SOSOverlay: React.FC<SOSOverlayProps> = ({
   const cleanPhone10 = rawDigits.slice(-10);
 
   const whatsappMessage = encodeURIComponent(
-    `🚨 [SAHELI EMERGENCY SOS ALERT]\n\nUrgent assistance requested! I am in emergency at Kolkata.\n\n📍 Live Google Maps Coordinates: https://maps.google.com/?q=${currentLocation.lat.toFixed(5)},${currentLocation.lng.toFixed(5)}\n\nPlease reach out or dispatch help immediately!`
+    `🚨 [SAHELI PAN-INDIA EMERGENCY SOS ALERT]\n\nUrgent assistance requested! I am in emergency.\n\n📍 Live Google Maps Coordinates: https://maps.google.com/?q=${currentLocation.lat.toFixed(5)},${currentLocation.lng.toFixed(5)}\n\nPlease reach out or dispatch help immediately!`
   );
 
   const whatsappUrl = cleanPhone10
@@ -126,7 +126,7 @@ export const SOSOverlay: React.FC<SOSOverlayProps> = ({
             <h2 className="text-xl font-black uppercase text-red-600 tracking-tight">
               EMERGENCY SOS TRIGGERED
             </h2>
-            <p className="text-xs font-semibold text-rose-700">Live Kolkata GPS Location Ready to Alert Family</p>
+            <p className="text-xs font-semibold text-rose-700">Live India GPS Location Ready to Alert Emergency Contacts</p>
           </div>
         </div>
 
@@ -168,24 +168,32 @@ export const SOSOverlay: React.FC<SOSOverlayProps> = ({
         <div className="p-4 rounded-2xl bg-gradient-to-r from-red-600 to-rose-600 text-white space-y-3 shadow-xl">
           <div className="flex items-center space-x-2 text-xs font-black uppercase tracking-wider text-rose-100">
             <AlertOctagon className="w-4 h-4 text-amber-300" />
-            <span>Kolkata Emergency Service Quick Dial</span>
+            <span>Pan-India Emergency Helplines</span>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
             <button
-              onClick={() => handleCallEmergency('1091')}
-              className="py-3.5 px-4 rounded-xl bg-white hover:bg-rose-50 text-red-600 font-black uppercase tracking-wider text-xs flex items-center justify-center space-x-2 shadow-lg transition-transform transform active:scale-95"
+              onClick={() => handleCallEmergency('112')}
+              className="py-3 px-2 rounded-xl bg-white hover:bg-rose-50 text-red-600 font-black uppercase tracking-wider text-xs flex flex-col items-center justify-center shadow-lg transition-transform transform active:scale-95 text-center"
             >
-              <PhoneCall className="w-4 h-4 text-red-600" />
-              <span>Women Helpline (1091)</span>
+              <PhoneCall className="w-4 h-4 text-red-600 mb-1" />
+              <span className="text-[11px]">112 National</span>
             </button>
 
             <button
-              onClick={() => handleCallEmergency('112')}
-              className="py-3.5 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-black uppercase tracking-wider text-xs flex items-center justify-center space-x-2 shadow-lg transition-transform transform active:scale-95"
+              onClick={() => handleCallEmergency('1091')}
+              className="py-3 px-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-black uppercase tracking-wider text-xs flex flex-col items-center justify-center shadow-lg transition-transform transform active:scale-95 text-center"
             >
-              <PhoneCall className="w-4 h-4 text-red-500" />
-              <span>Police Emergency (112)</span>
+              <PhoneCall className="w-4 h-4 text-red-400 mb-1" />
+              <span className="text-[11px]">1091 Women</span>
+            </button>
+
+            <button
+              onClick={() => handleCallEmergency('181')}
+              className="py-3 px-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-black uppercase tracking-wider text-xs flex flex-col items-center justify-center shadow-lg transition-transform transform active:scale-95 text-center"
+            >
+              <PhoneCall className="w-4 h-4 text-slate-950 mb-1" />
+              <span className="text-[11px]">181 Distress</span>
             </button>
           </div>
           

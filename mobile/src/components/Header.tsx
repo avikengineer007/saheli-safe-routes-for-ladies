@@ -23,9 +23,11 @@ export const Header: React.FC<HeaderProps> = ({
         
         {/* Brand Header */}
         <div onClick={() => setActiveTab('home')} className="flex items-center space-x-3 cursor-pointer select-none">
-          <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-red-600 to-rose-500 flex items-center justify-center shadow-lg shadow-rose-500/30 text-white">
-            <ShieldCheck className="w-6 h-6" />
-          </div>
+          <img
+            src="/logo.png"
+            alt="SAHELI Safety Route Logo"
+            className="w-12 h-12 object-cover rounded-2xl shadow-md border border-rose-200 hover:scale-105 transition-transform"
+          />
           <div>
             <div className="flex items-center space-x-2">
               <h1 className="text-2xl font-black tracking-tight text-red-600">
@@ -33,10 +35,10 @@ export const Header: React.FC<HeaderProps> = ({
               </h1>
               <span className="text-[11px] uppercase tracking-wider font-extrabold px-2.5 py-0.5 rounded-full bg-rose-100 text-rose-700 border border-rose-300 flex items-center space-x-1">
                 <MapPin className="w-3 h-3 text-red-600" />
-                <span>Kolkata Safe Routes</span>
+                <span>Pan-India Safe Routes (28 States & 8 UTs)</span>
               </span>
             </div>
-            <p className="text-xs text-slate-500 font-medium">Safe Walking Path Finder & Emergency Guard for Sisters & Elders</p>
+            <p className="text-xs text-slate-500 font-medium">Safe Walking Path Finder & Emergency Guard for Sisters & Elders across India</p>
           </div>
         </div>
 

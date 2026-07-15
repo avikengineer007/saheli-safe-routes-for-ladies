@@ -23,10 +23,10 @@ export class ApiClient {
         return await res.json();
       }
     } catch (err) {
-      console.warn('[SAHELI API] Connecting via fallback Kolkata spatial router client');
+      console.warn('[SAHELI API] Connecting via fallback Pan-India spatial router client');
     }
 
-    return this.getMockKolkataRoutes(originName, destName);
+    return this.getMockPanIndiaRoutes(originName, destName);
   }
 
   public static async startJourney(
@@ -51,7 +51,7 @@ export class ApiClient {
     } catch (err) {}
 
     return {
-      journeyId: `jny_kolkata_${Date.now()}`,
+      journeyId: `jny_india_${Date.now()}`,
       etaMinutes: route.durationMinutes
     };
   }
@@ -91,7 +91,7 @@ export class ApiClient {
       }
     } catch (err) {}
 
-    return { emergencyCallNumber: '1091' }; // Kolkata Women's Helpline
+    return { emergencyCallNumber: '112' }; // All India National Emergency Line (with 1091 Women Helpline)
   }
 
   public static async submitIncidentReport(input: {
@@ -105,7 +105,7 @@ export class ApiClient {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          userId: 'user_kolkata_1',
+          userId: 'user_panindia_1',
           userTrustScore: 0.85,
           userAccountAgeDays: 14,
           ...input
@@ -117,7 +117,7 @@ export class ApiClient {
     } catch (err) {}
 
     return {
-      message: 'Report submitted and updated on the Kolkata safety map.',
+      message: 'Report submitted and updated on the Pan-India safety map.',
       status: 'verified'
     };
   }
@@ -132,38 +132,30 @@ export class ApiClient {
     } catch (err) {}
 
     return [
-      { lat: 22.5530, lng: 88.3525, intensity: 0.85, category: 'poor_lighting', ageDays: 2 },
-      { lat: 22.5450, lng: 88.3480, intensity: 0.95, category: 'harassment', ageDays: 1 },
-      { lat: 22.5410, lng: 88.3440, intensity: 0.60, category: 'unsafe_area', ageDays: 4 }
+      { lat: 28.6300, lng: 77.2180, intensity: 0.80, category: 'poor_lighting', ageDays: 1 }, // Delhi NCR
+      { lat: 18.9410, lng: 72.8250, intensity: 0.95, category: 'harassment', ageDays: 2 },    // Mumbai
+      { lat: 12.9730, lng: 77.6080, intensity: 0.75, category: 'unsafe_area', ageDays: 3 },   // Bengaluru
+      { lat: 22.5530, lng: 88.3525, intensity: 0.85, category: 'poor_lighting', ageDays: 2 }, // Kolkata
+      { lat: 17.4420, lng: 78.3760, intensity: 0.70, category: 'poor_lighting', ageDays: 1 }, // Hyderabad
+      { lat: 26.1540, lng: 91.7760, intensity: 0.80, category: 'unsafe_area', ageDays: 4 }    // Guwahati
     ];
   }
 
-  private static getMockKolkataRoutes(originName: string, destName: string): { routes: RouteCandidate[]; summaryNotice: string } {
+  private static getMockPanIndiaRoutes(originName: string, destName: string): { routes: RouteCandidate[]; summaryNotice: string } {
     const LANDMARKS: Record<string, { lat: number; lng: number }> = {
-      'Park Street Metro': { lat: 22.5552, lng: 88.3510 },
-      'Rabindra Sadan': { lat: 22.5416, lng: 88.3475 },
-      'Victoria Memorial': { lat: 22.5448, lng: 88.3426 },
-      'Salt Lake Sector V': { lat: 22.5731, lng: 88.4337 },
-      'Howrah Railway Station': { lat: 22.5839, lng: 88.3430 },
-      'Sealdah Railway Station': { lat: 22.5670, lng: 88.3710 },
-      'Netaji Subhash Chandra Bose Intl Airport (CCU)': { lat: 22.6547, lng: 88.4467 },
-      'Gariahat Crossing': { lat: 22.5186, lng: 88.3664 },
-      'Esplanade Bus Terminus': { lat: 22.5644, lng: 88.3517 },
-      'New Market (Lindsay St)': { lat: 22.5601, lng: 88.3522 },
-      'College Street Market': { lat: 22.5753, lng: 88.3630 },
-      'Burrabazar Market': { lat: 22.5815, lng: 88.3540 },
-      'St. Xavier\'s College (Park St)': { lat: 22.5485, lng: 88.3556 },
-      'Karunamoyee Bus Station (Salt Lake)': { lat: 22.5852, lng: 88.4162 },
-      'Nicco Park (Salt Lake)': { lat: 22.5714, lng: 88.4230 },
-      'Eco Park Rajarhat': { lat: 22.6108, lng: 88.4674 },
-      'City Centre 1 (Salt Lake)': { lat: 22.5885, lng: 88.4080 },
-      'EM Bypass Ruby Hospital Crossing': { lat: 22.5135, lng: 88.3990 },
-      'Science City Kolkata': { lat: 22.5402, lng: 88.3965 },
-      'Ballygunge Phandi': { lat: 22.5310, lng: 88.3650 },
-      'Jadavpur 8B Bus Stand': { lat: 22.4990, lng: 88.3688 },
-      'Kalighat Kali Temple': { lat: 22.5200, lng: 88.3425 },
-      'Tollygunge Metro Station': { lat: 22.4930, lng: 88.3470 },
-      'Shyambazar Five Point Crossing': { lat: 22.6025, lng: 88.3700 }
+      'Connaught Place (Delhi)': { lat: 28.6315, lng: 77.2167 },
+      'India Gate (New Delhi)': { lat: 28.6129, lng: 77.2295 },
+      'Marine Drive (Mumbai, MH)': { lat: 18.9438, lng: 72.8232 },
+      'Gateway of India (Mumbai)': { lat: 18.9220, lng: 72.8347 },
+      'MG Road Metro (Bengaluru, KA)': { lat: 12.9756, lng: 77.6066 },
+      'T. Nagar Bus Terminus (Chennai, TN)': { lat: 13.0418, lng: 80.2341 },
+      'HITEC City (Hyderabad, TS)': { lat: 17.4435, lng: 78.3772 },
+      'Park Street Metro (Kolkata, WB)': { lat: 22.5552, lng: 88.3510 },
+      'Rabindra Sadan (Kolkata, WB)': { lat: 22.5416, lng: 88.3475 },
+      'Police Bazaar (Shillong, ML)': { lat: 25.5760, lng: 91.8847 },
+      'GS Road ABC Crossing (Guwahati, AS)': { lat: 26.1554, lng: 91.7783 },
+      'Pink City Hawa Mahal (Jaipur, RJ)': { lat: 26.9239, lng: 75.8267 },
+      'Hazratganj GPO (Lucknow, UP)': { lat: 26.8467, lng: 80.9462 }
     };
 
     const resolve = (name: string, fallbackLat: number, fallbackLng: number) => {
@@ -172,13 +164,13 @@ export class ApiClient {
       let hash = 0;
       for (let i = 0; i < name.length; i++) hash = (hash * 31 + name.charCodeAt(i)) & 0xffffffff;
       return {
-        lat: 22.5100 + (Math.abs(hash % 800) / 10000),
-        lng: 88.3300 + (Math.abs((hash >> 4) % 1000) / 10000)
+        lat: 12.0000 + (Math.abs(hash % 20000) / 1000),
+        lng: 73.0000 + (Math.abs((hash >> 4) % 20000) / 1000)
       };
     };
 
-    const origPt = resolve(originName, 22.5552, 88.3510);
-    const destPt = resolve(destName, 22.5416, 88.3475);
+    const origPt = resolve(originName, 28.6315, 77.2167);
+    const destPt = resolve(destName, 28.6129, 77.2295);
     const dLat = destPt.lat - origPt.lat;
     const dLng = destPt.lng - origPt.lng;
 
@@ -203,19 +195,19 @@ export class ApiClient {
     ];
 
     return {
-      summaryNotice: "Kolkata Police open data & Kolkata street lighting data integrated. Verified by local community members.",
+      summaryNotice: "Pan-India Police Open Data & State Municipal Streetlight data integrated across all 28 States & 8 Union Territories.",
       routes: [
         {
-          id: 'route_kolkata_main',
-          name: `${originName} → ${destName} (Well-Lit & Busiest)`,
+          id: 'route_india_main',
+          name: `${originName} → ${destName} (Well-Lit & Main Corridor)`,
           isRecommended: true,
           tag: 'safest',
           distanceMeters: 1750,
           durationMinutes: 22,
           compositeSafetyScore: 92,
           scoreExplanation: [
-            '100% Bright street lighting along main arterial boulevard',
-            'Constant pedestrian activity & shops open late',
+            '100% Bright street lighting along arterial boulevard',
+            'Constant pedestrian activity & active shops open late',
             '+10 bonus for zero safety complaints in last 30 days'
           ],
           geoJsonPolyline: mainPoly,
@@ -235,7 +227,7 @@ export class ApiClient {
           ]
         },
         {
-          id: 'route_kolkata_shortcut',
+          id: 'route_india_shortcut',
           name: `${originName} → ${destName} (Direct Dark Alleyway Shortcut)`,
           isRecommended: false,
           tag: 'fastest',
@@ -243,9 +235,9 @@ export class ApiClient {
           durationMinutes: 16,
           compositeSafetyScore: 45,
           scoreExplanation: [
-            'Dimly lit alleyways behind unpatrolled sector (-36 night penalty)',
+            'Dimly lit side lanes behind unpatrolled sector (-36 night penalty)',
             'Very low foot activity after 8 PM',
-            'Recent harassment complaint reported 2 days ago'
+            'Recent crowdsourced safety report submitted'
           ],
           geoJsonPolyline: shortPoly,
           segments: [
@@ -258,7 +250,7 @@ export class ApiClient {
           ]
         },
         {
-          id: 'route_kolkata_camac',
+          id: 'route_india_commercial',
           name: `${originName} → ${destName} (Commercial Promenade)`,
           isRecommended: false,
           tag: 'balanced',

@@ -64,9 +64,9 @@ export const IncidentReportModal: React.FC<IncidentReportModalProps> = ({
           </div>
           <div>
             <h3 className="font-extrabold text-slate-900 text-lg">
-              Report Kolkata Safety Concern
+              Report Safety Concern
             </h3>
-            <p className="text-xs text-slate-500 font-medium">Anonymous Hyperlocal Community Map Signal</p>
+            <p className="text-xs text-slate-500 font-medium">Anonymous Pan-India Community Map Signal</p>
           </div>
         </div>
 
@@ -136,7 +136,7 @@ export const IncidentReportModal: React.FC<IncidentReportModalProps> = ({
             {/* Privacy notice */}
             <div className="flex items-center space-x-2 text-[11px] text-slate-600 bg-rose-50 p-2.5 rounded-xl border border-rose-200 font-medium">
               <UserX className="w-4 h-4 text-emerald-600 shrink-0" />
-              <span>Identity Protected: Reports are published anonymously on public Kolkata map.</span>
+              <span>Identity Protected: Reports are published anonymously on public Pan-India safety map.</span>
             </div>
 
             <button

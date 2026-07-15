@@ -23,23 +23,23 @@ export const ElderlyModeView: React.FC<ElderlyModeViewProps> = ({
         </div>
         <div>
           <h2 className="text-2xl font-black text-red-600 tracking-tight">
-            Kolkata Elderly Companion
+            Pan-India Senior Companion
           </h2>
-          <p className="text-sm font-semibold text-slate-600">Simple 2-Tap Kolkata Safe Walk & Family Alert</p>
+          <p className="text-sm font-semibold text-slate-600">Simple 2-Tap Pan-India Safe Walk & Emergency Helplines</p>
         </div>
       </div>
 
       {/* Large 2-Tap Action Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         
-        {/* Safe Kolkata Walk Button */}
+        {/* Safe Walk Button */}
         <button
           onClick={onStartSimpleJourney}
           className="p-6 rounded-3xl bg-gradient-to-br from-red-600 to-rose-500 hover:from-red-500 hover:to-rose-400 text-white font-black text-xl tracking-wide flex flex-col items-center justify-center space-y-2 shadow-2xl shadow-red-500/30 transition-all border-2 border-rose-300 transform hover:scale-102"
         >
           <Navigation className="w-11 h-11 text-white" />
           <span>START SAFE WALK</span>
-          <span className="text-xs font-bold uppercase text-rose-100 opacity-90">Auto-routes along well-lit Kolkata main roads</span>
+          <span className="text-xs font-bold uppercase text-rose-100 opacity-90">Auto-routes along well-lit main roads across India</span>
         </button>
 
         {/* Big Emergency SOS Button */}
@@ -49,7 +49,7 @@ export const ElderlyModeView: React.FC<ElderlyModeViewProps> = ({
         >
           <ShieldAlert className="w-11 h-11 text-white animate-pulse" />
           <span>EMERGENCY SOS</span>
-          <span className="text-xs font-bold uppercase text-rose-100 opacity-90">Instant alert to family + Kolkata 1091 helpline</span>
+          <span className="text-xs font-bold uppercase text-rose-100 opacity-90">Instant alert to family + 112 & 1091 National Helplines</span>
         </button>
 
       </div>
@@ -85,7 +85,7 @@ export const ElderlyModeView: React.FC<ElderlyModeViewProps> = ({
         </div>
 
         <p className="text-xs text-slate-600 font-semibold leading-relaxed">
-          * Family contacts automatically receive live SMS tracking links when you start a Kolkata walk or tap SOS.
+          * Family contacts automatically receive live tracking links when you start a safe walk or tap SOS anywhere in India.
         </p>
       </div>
 

@@ -26,7 +26,7 @@ const MainAppContent: React.FC = () => {
 
   // Router candidate states
   const [candidates, setCandidates] = useState<RouteCandidate[]>([]);
-  const [selectedRouteId, setSelectedRouteId] = useState<string>('route_kolkata_main');
+  const [selectedRouteId, setSelectedRouteId] = useState<string>('route_india_main');
   const [disclaimerNotice, setDisclaimerNotice] = useState<string>('');
 
   // Live journey state
@@ -37,8 +37,8 @@ const MainAppContent: React.FC = () => {
 
   // User real live GPS location
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number }>({
-    lat: 22.5552,
-    lng: 88.3510
+    lat: 28.6315,
+    lng: 77.2167
   });
 
   // Overlay state
@@ -46,8 +46,8 @@ const MainAppContent: React.FC = () => {
   const [sosContactPhone, setSosContactPhone] = useState('');
   const [reportModalOpen, setReportModalOpen] = useState(false);
   const [reportPinLocation, setReportPinLocation] = useState<{ lat: number; lng: number }>({
-    lat: 22.5552,
-    lng: 88.3510
+    lat: 28.6315,
+    lng: 77.2167
   });
 
   // Fetch real-time live browser GPS location
@@ -60,7 +60,7 @@ const MainAppContent: React.FC = () => {
             lng: position.coords.longitude
           };
           setUserLocation(newLoc);
-          setReportPinLocation(prev => (prev.lat === 22.5530 || prev.lat === 22.5552) ? newLoc : prev);
+          setReportPinLocation(prev => (prev.lat === 22.5530 || prev.lat === 22.5552 || prev.lat === 28.6315) ? newLoc : prev);
         },
         (error) => {
           console.warn('[SAHELI GPS] Browser location access fallback to default:', error.message);
@@ -96,7 +96,7 @@ const MainAppContent: React.FC = () => {
   };
 
   const handleStartJourney = async (route: RouteCandidate) => {
-    const startRes = await ApiClient.startJourney('user_kolkata_1', route);
+    const startRes = await ApiClient.startJourney('user_india_1', route);
 
     const newJourney: ActiveJourney = {
       id: startRes.journeyId,
@@ -154,7 +154,7 @@ const MainAppContent: React.FC = () => {
     const rawDigits = primaryPhone.replace(/[^0-9]/g, '');
     const cleanPhone10 = rawDigits.slice(-10);
     const whatsappMsg = encodeURIComponent(
-      `🚨 [SAHELI EMERGENCY SOS ALERT]\n\nUrgent assistance requested! I am in emergency at Kolkata.\n\n📍 Live Google Maps Coordinates: https://maps.google.com/?q=${loc.lat.toFixed(5)},${loc.lng.toFixed(5)}\n\nPlease reach out or dispatch help immediately!`
+      `🚨 [SAHELI PAN-INDIA EMERGENCY SOS ALERT]\n\nUrgent assistance requested! I am in emergency.\n\n📍 Live Google Maps Coordinates: https://maps.google.com/?q=${loc.lat.toFixed(5)},${loc.lng.toFixed(5)}\n\nPlease reach out or dispatch help immediately!`
     );
     const waUrl = cleanPhone10
       ? `https://wa.me/91${cleanPhone10}?text=${whatsappMsg}`
@@ -242,14 +242,14 @@ const MainAppContent: React.FC = () => {
                 <div className="flex flex-col sm:flex-row justify-between items-center bg-white p-4 rounded-2xl border border-rose-200 shadow-sm text-xs gap-3">
                   <div className="flex items-center space-x-2 text-slate-600 font-medium">
                     <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
-                    <span>Spotted dark streetlamps or an unsafe corner in Kolkata? Click any map spot to add a report.</span>
+                    <span>Spotted dark streetlamps or an unsafe corner in India? Click any map spot to add a report.</span>
                   </div>
                   <button
                     onClick={() => setReportModalOpen(true)}
                     className="px-4 py-2 rounded-xl bg-red-600 hover:bg-red-500 text-white font-extrabold flex items-center space-x-1.5 shadow-md transition-colors shrink-0"
                   >
                     <PlusCircle className="w-4 h-4" />
-                    <span>Add Kolkata Incident</span>
+                    <span>Add Safety Incident</span>
                   </button>
                 </div>
               </>
@@ -278,12 +278,12 @@ const MainAppContent: React.FC = () => {
                 />
               ) : (
                 <div className="p-8 rounded-3xl bg-white border border-rose-200 shadow-xl text-center space-y-3">
-                  <p className="text-sm font-semibold text-slate-600">No active Kolkata walk in progress.</p>
+                  <p className="text-sm font-semibold text-slate-600">No active safe walk in progress.</p>
                   <button
                     onClick={() => setActiveTab('plan')}
                     className="px-6 py-3 rounded-2xl bg-red-600 text-white font-black text-xs uppercase tracking-wider shadow-md"
                   >
-                    Find & Start Kolkata Safe Walk
+                    Find & Start Pan-India Safe Walk
                   </button>
                 </div>
               )

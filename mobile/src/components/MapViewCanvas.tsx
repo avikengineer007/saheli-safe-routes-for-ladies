@@ -29,39 +29,40 @@ export const MapViewCanvas: React.FC<MapViewCanvasProps> = ({
   const [showSuggestions, setShowSuggestions] = React.useState(false);
 
   const LANDMARKS = [
-    { name: 'Park Street Metro', lat: 22.5552, lng: 88.3510 },
-    { name: 'Rabindra Sadan', lat: 22.5416, lng: 88.3475 },
-    { name: 'Victoria Memorial', lat: 22.5448, lng: 88.3426 },
-    { name: 'Salt Lake Sector V', lat: 22.5731, lng: 88.4337 },
-    { name: 'Howrah Railway Station', lat: 22.5839, lng: 88.3430 },
-    { name: 'Sealdah Railway Station', lat: 22.5670, lng: 88.3710 },
-    { name: 'Netaji Subhash Chandra Bose Airport (CCU)', lat: 22.6547, lng: 88.4467 },
-    { name: 'Gariahat Crossing', lat: 22.5186, lng: 88.3664 },
-    { name: 'Esplanade Bus Terminus', lat: 22.5644, lng: 88.3517 },
-    { name: 'New Market (Lindsay St)', lat: 22.5601, lng: 88.3522 },
-    { name: 'College Street Market', lat: 22.5753, lng: 88.3630 },
-    { name: 'Burrabazar Market', lat: 22.5815, lng: 88.3540 },
-    { name: 'St. Xavier\'s College (Park St)', lat: 22.5485, lng: 88.3556 },
-    { name: 'Karunamoyee Bus Station (Salt Lake)', lat: 22.5852, lng: 88.4162 },
-    { name: 'Nicco Park (Salt Lake)', lat: 22.5714, lng: 88.4230 },
-    { name: 'New Town Action Area 1', lat: 22.5880, lng: 88.4600 },
-    { name: 'Eco Park Rajarhat', lat: 22.6108, lng: 88.4674 },
-    { name: 'City Centre 1 (Salt Lake)', lat: 22.5885, lng: 88.4080 },
-    { name: 'EM Bypass Ruby Hospital Crossing', lat: 22.5135, lng: 88.3990 },
-    { name: 'Science City Kolkata', lat: 22.5402, lng: 88.3965 },
-    { name: 'Ballygunge Phandi', lat: 22.5310, lng: 88.3650 },
-    { name: 'Jadavpur 8B Bus Stand', lat: 22.4990, lng: 88.3688 },
-    { name: 'Jadavpur University', lat: 22.4985, lng: 88.3715 },
-    { name: 'Kalighat Kali Temple', lat: 22.5200, lng: 88.3425 },
-    { name: 'Tollygunge Metro Station', lat: 22.4930, lng: 88.3470 },
-    { name: 'Bhowanipore Chowrasta', lat: 22.5340, lng: 88.3450 },
-    { name: 'South City Mall', lat: 22.5020, lng: 88.3610 },
-    { name: 'Behala Chowrasta', lat: 22.4840, lng: 88.3120 },
-    { name: 'Alipore Zoo', lat: 22.5360, lng: 88.3330 },
-    { name: 'Shyambazar Five Point Crossing', lat: 22.6025, lng: 88.3700 },
-    { name: 'Shobhabazar Sutanuti', lat: 22.5950, lng: 88.3600 },
-    { name: 'Dakshineswar Kali Temple', lat: 22.6550, lng: 88.3580 },
-    { name: 'Belur Math', lat: 22.6310, lng: 88.3560 }
+    // Delhi NCR
+    { name: 'Connaught Place (Delhi)', lat: 28.6315, lng: 77.2167 },
+    { name: 'India Gate (New Delhi)', lat: 28.6129, lng: 77.2295 },
+    { name: 'Hauz Khas Village (Delhi)', lat: 28.5494, lng: 77.1960 },
+    { name: 'Cyber City (Gurugram, HR)', lat: 28.4950, lng: 77.0895 },
+    { name: 'Noida Sector 18 (UP)', lat: 28.5708, lng: 77.3261 },
+    // Maharashtra & West
+    { name: 'Marine Drive (Mumbai, MH)', lat: 18.9438, lng: 72.8232 },
+    { name: 'Gateway of India (Mumbai)', lat: 18.9220, lng: 72.8347 },
+    { name: 'Bandra Kurla Complex (BKC, Mumbai)', lat: 19.0657, lng: 72.8686 },
+    { name: 'FC Road (Pune, MH)', lat: 18.5204, lng: 73.8416 },
+    { name: 'Pink City Hawa Mahal (Jaipur, RJ)', lat: 26.9239, lng: 75.8267 },
+    { name: 'Sabarmati Riverfront (Ahmedabad, GJ)', lat: 23.0300, lng: 72.5800 },
+    // Karnataka & South
+    { name: 'MG Road Metro (Bengaluru, KA)', lat: 12.9756, lng: 77.6066 },
+    { name: 'Koramangala 5th Block (Bengaluru)', lat: 12.9352, lng: 77.6245 },
+    { name: 'T. Nagar Bus Terminus (Chennai, TN)', lat: 13.0418, lng: 80.2341 },
+    { name: 'Marina Beach (Chennai, TN)', lat: 13.0500, lng: 80.2824 },
+    { name: 'HITEC City (Hyderabad, TS)', lat: 17.4435, lng: 78.3772 },
+    { name: 'Charminar (Hyderabad, TS)', lat: 17.3616, lng: 78.4747 },
+    { name: 'Marine Drive Kochi (Kerala)', lat: 9.9784, lng: 76.2753 },
+    // West Bengal & East
+    { name: 'Park Street Metro (Kolkata, WB)', lat: 22.5552, lng: 88.3510 },
+    { name: 'Rabindra Sadan (Kolkata, WB)', lat: 22.5416, lng: 88.3475 },
+    { name: 'Salt Lake Sector V (Kolkata, WB)', lat: 22.5731, lng: 88.4337 },
+    { name: 'Howrah Railway Station (WB)', lat: 22.5839, lng: 88.3430 },
+    { name: 'Patna Sahib Railway Hub (Bihar)', lat: 25.6110, lng: 85.2285 },
+    { name: 'KIIT Chowk Bhubaneswar (Odisha)', lat: 20.3533, lng: 85.8189 },
+    // Northeast & North
+    { name: 'Police Bazaar (Shillong, ML)', lat: 25.5760, lng: 91.8847 },
+    { name: 'GS Road ABC Crossing (Guwahati, AS)', lat: 26.1554, lng: 91.7783 },
+    { name: 'Lal Chowk (Srinagar, J&K)', lat: 34.0713, lng: 74.8078 },
+    { name: 'Sector 17 Plaza (Chandigarh, UT)', lat: 30.7398, lng: 76.7827 },
+    { name: 'Hazratganj GPO (Lucknow, UP)', lat: 26.8467, lng: 80.9462 }
   ];
 
   const suggestions = searchQuery.trim()

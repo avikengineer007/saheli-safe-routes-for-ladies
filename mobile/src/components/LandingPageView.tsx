@@ -18,72 +18,72 @@ export const LandingPageView: React.FC<LandingPageViewProps> = ({
 }) => {
   const EMERGENCY_CONTACTS = [
     {
-      title: "Kolkata Police Women Helpline",
-      number: "1091",
-      altNumber: "033-2214-5000",
-      description: "24x7 Dedicated Kolkata Police helpline for women & girls in distress.",
-      badge: "24/7 Priority Toll-Free",
+      title: "National Emergency Response System",
+      number: "112",
+      altNumber: "Unified Emergency Across India",
+      description: "24x7 Single emergency response for Police, Fire, and Ambulance nationwide.",
+      badge: "National Emergency (All India)",
       color: "from-red-600 to-rose-600",
       isPrimary: true
     },
     {
-      title: "National Emergency Response System",
-      number: "112",
-      altNumber: "Unified Emergency",
-      description: "Single emergency response for Police, Fire, and Medical assistance.",
-      badge: "National Emergency",
+      title: "National Women Helpline",
+      number: "1091",
+      altNumber: "Toll-Free All India",
+      description: "24x7 Dedicated Women & Girls safety helpline across all States & UTs.",
+      badge: "Women Safety Line",
       color: "from-rose-600 to-red-700",
       isPrimary: true
     },
     {
-      title: "Kolkata Police Control Room",
-      number: "100",
-      altNumber: "033-2214-3230",
-      description: "Direct control desk for quick Kolkata Police team dispatch.",
-      badge: "Kolkata Police Desk",
+      title: "Women in Distress Helpline",
+      number: "181",
+      altNumber: "State Women Support",
+      description: "Immediate guidance, protection, legal assistance, and shelter support.",
+      badge: "Distress Helpline",
       color: "from-slate-800 to-slate-900",
       isPrimary: false
     },
     {
-      title: "Senior Citizen Safety Helpline",
+      title: "Elderline (Senior Citizens)",
       number: "14567",
       altNumber: "1800-180-1253",
-      description: "Elderly safety support, emergency medical transport & companion care.",
+      description: "Senior citizen safety support, emergency medical aid & care companion desk.",
       badge: "Elderly Care",
       color: "from-amber-600 to-amber-700",
       isPrimary: false
     },
     {
-      title: "Childline India (Young Sisters & Girls)",
+      title: "Childline India (Young Sisters)",
       number: "1098",
-      altNumber: "Free Helpline",
-      description: "24/7 protection & assistance for children and teenage girls.",
+      altNumber: "Free National Helpline",
+      description: "24/7 protection & assistance for children and young girls.",
       badge: "Youth & Children",
       color: "from-pink-600 to-rose-600",
       isPrimary: false
     },
     {
-      title: "Emergency Medical & Ambulance",
+      title: "Emergency Medical Ambulance",
       number: "102",
       altNumber: "108 Ambulance",
-      description: "Immediate emergency medical response and hospital transport dispatch.",
+      description: "Immediate medical response and emergency hospital transport dispatch.",
       badge: "Medical Response",
       color: "from-emerald-600 to-teal-700",
       isPrimary: false
     },
     {
-      title: "Cyber Crime Helpline",
+      title: "National Cyber Crime Portal",
       number: "1930",
-      altNumber: "Online Harassment",
-      description: "Reporting cyber stalking, online harassment, and digital blackmail.",
+      altNumber: "Cyber Harassment",
+      description: "Reporting cyber stalking, online harassment, and digital security threats.",
       badge: "Cyber Safety",
       color: "from-purple-600 to-indigo-700",
       isPrimary: false
     },
     {
-      title: "State Disaster Management Cell",
+      title: "Disaster Management Cell",
       number: "1070",
-      altNumber: "033-2214-3526",
+      altNumber: "State Control Room",
       description: "Emergency support during extreme weather, flooding, and urban crisis.",
       badge: "Disaster Cell",
       color: "from-cyan-600 to-blue-700",
@@ -99,36 +99,50 @@ export const LandingPageView: React.FC<LandingPageViewProps> = ({
         <div className="absolute -top-24 -right-24 w-96 h-96 bg-red-600/20 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute -bottom-24 -left-24 w-96 h-96 bg-rose-600/15 rounded-full blur-3xl pointer-events-none" />
 
-        <div className="relative z-10 space-y-4 max-w-3xl">
-          <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-rose-500/20 border border-rose-500/40 text-rose-300 text-xs font-black uppercase tracking-wider">
-            <Sparkles className="w-3.5 h-3.5 text-amber-300 animate-pulse" />
-            <span>AI Safety Navigation & Emergency Guard for Sisters & Elders</span>
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div className="space-y-4 max-w-2xl">
+            <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-rose-500/20 border border-rose-500/40 text-rose-300 text-xs font-black uppercase tracking-wider">
+              <Sparkles className="w-3.5 h-3.5 text-amber-300 animate-pulse" />
+              <span>AI Safety Navigation & Emergency Guard for Sisters & Elders across 28 States & 8 UTs</span>
+            </div>
+
+            <h1 className="text-3xl sm:text-5xl font-black text-white tracking-tight leading-tight">
+              Walk Safely Anywhere in India with <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-400 via-rose-300 to-amber-200">SAHELI</span>
+            </h1>
+
+            <p className="text-sm sm:text-base text-slate-300 font-medium leading-relaxed max-w-2xl">
+              SAHELI computes real-time safe walking routes prioritised by street lighting, foot traffic, and crowdsourced incident reports across Indian territory. Features off-route deviation monitoring, AI incident classification, and 1-tap emergency helplines.
+            </p>
+
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-2">
+              <button
+                onClick={onNavigateToPlan}
+                className="px-8 py-4 rounded-2xl bg-gradient-to-r from-red-600 to-rose-500 hover:from-red-500 hover:to-rose-400 text-white font-black text-sm uppercase tracking-wider shadow-xl shadow-red-600/30 flex items-center justify-center space-x-2 transition-all transform hover:scale-102"
+              >
+                <Navigation className="w-5 h-5 text-white" />
+                <span>Find Safe Route Now</span>
+              </button>
+
+              <button
+                onClick={onTriggerSOS}
+                className="px-6 py-4 rounded-2xl bg-red-700/80 hover:bg-red-600 border border-red-500/50 text-white font-extrabold text-sm uppercase tracking-wider flex items-center justify-center space-x-2 transition-all"
+              >
+                <ShieldAlert className="w-5 h-5 text-amber-300 animate-pulse" />
+                <span>One-Tap SOS Alert</span>
+              </button>
+            </div>
           </div>
 
-          <h1 className="text-3xl sm:text-5xl font-black text-white tracking-tight leading-tight">
-            Walk Safely Anywhere in Kolkata with <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-400 via-rose-300 to-amber-200">SAHELI</span>
-          </h1>
-
-          <p className="text-sm sm:text-base text-slate-300 font-medium leading-relaxed max-w-2xl">
-            SAHELI computes real-time safe walking routes prioritised by street lighting, foot traffic, and open crime data. Features live off-route deviation detection, AI incident classification, and 1-tap emergency helplines.
-          </p>
-
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-2">
-            <button
-              onClick={onNavigateToPlan}
-              className="px-8 py-4 rounded-2xl bg-gradient-to-r from-red-600 to-rose-500 hover:from-red-500 hover:to-rose-400 text-white font-black text-sm uppercase tracking-wider shadow-xl shadow-red-600/30 flex items-center justify-center space-x-2 transition-all transform hover:scale-102"
-            >
-              <Navigation className="w-5 h-5 text-white" />
-              <span>Find Safe Route Now</span>
-            </button>
-
-            <button
-              onClick={onTriggerSOS}
-              className="px-6 py-4 rounded-2xl bg-red-700/80 hover:bg-red-600 border border-red-500/50 text-white font-extrabold text-sm uppercase tracking-wider flex items-center justify-center space-x-2 transition-all"
-            >
-              <ShieldAlert className="w-5 h-5 text-amber-300 animate-pulse" />
-              <span>One-Tap SOS Alert</span>
-            </button>
+          {/* Official Brand Logo Showcase Box */}
+          <div className="bg-rose-950/60 p-5 rounded-3xl border border-rose-500/30 flex flex-col items-center justify-center space-y-2 shrink-0 shadow-2xl backdrop-blur-sm self-start md:self-center">
+            <img
+              src="/logo.png"
+              alt="SAHELI Official Logo — Your Safety Route, Your Voice"
+              className="w-32 h-32 object-cover rounded-2xl border-2 border-rose-400/50 shadow-2xl"
+            />
+            <span className="text-[10px] font-black uppercase tracking-widest text-amber-300 text-center">
+              YOUR SAFETY ROUTE, YOUR VOICE
+            </span>
           </div>
         </div>
 
@@ -147,7 +161,7 @@ export const LandingPageView: React.FC<LandingPageViewProps> = ({
           <div className="p-3.5 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-1">
             <div className="text-2xl font-black text-amber-400">24/7</div>
             <div className="text-xs font-bold text-slate-200">Helpline Integration</div>
-            <div className="text-[11px] text-slate-400 font-medium">1091 & 112 Kolkata Police Desk</div>
+            <div className="text-[11px] text-slate-400 font-medium">112, 1091 & 181 Emergency Lines</div>
           </div>
           <div className="p-3.5 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-1">
             <div className="text-2xl font-black text-purple-400">Claude AI</div>

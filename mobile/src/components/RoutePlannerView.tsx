@@ -12,37 +12,42 @@ interface RoutePlannerViewProps {
   disclaimerNotice?: string;
 }
 
-const ALL_KOLKATA_LOCATIONS = [
-  'Park Street Metro Station',
-  'Rabindra Sadan Crossing',
-  'Victoria Memorial Hall',
-  'Salt Lake Sector V (IT Hub)',
-  'Howrah Railway Station',
-  'Sealdah Railway Station',
-  'Netaji Subhash Chandra Bose Intl Airport (CCU)',
-  'Gariahat Crossing & Mall',
-  'Esplanade Bus Terminus',
-  'New Market (Lindsay Street)',
-  'College Street Market & University',
-  'Burrabazar Commercial Area',
-  'Karunamoyee Bus Station (Salt Lake)',
-  'Eco Park Rajarhat',
-  'City Centre 1 (Salt Lake)',
-  'EM Bypass Ruby Hospital Crossing',
-  'Science City Kolkata',
-  'Ballygunge Phandi',
-  'Jadavpur 8B Bus Stand',
-  'Jadavpur University Campus',
-  'Kalighat Temple',
-  'Tollygunge Metro Station',
-  'Bhowanipore',
-  'South City Mall (Prince Anwar Shah Rd)',
-  'Behala Chowrasta',
-  'Alipore Zoo',
-  'Shyambazar Five Point Crossing',
-  'Shobhabazar Sutanuti',
-  'Dakshineswar Temple',
-  'Belur Math'
+const ALL_INDIAN_LOCATIONS = [
+  // Delhi NCR
+  'Connaught Place (Delhi)',
+  'India Gate (New Delhi)',
+  'Hauz Khas Village (Delhi)',
+  'Cyber City (Gurugram, HR)',
+  'Noida Sector 18 (UP)',
+  'Chandni Chowk (Old Delhi)',
+  // Maharashtra
+  'Marine Drive (Mumbai, MH)',
+  'Gateway of India (Mumbai, MH)',
+  'Bandra Kurla Complex (BKC, Mumbai)',
+  'FC Road (Pune, MH)',
+  // Karnataka & South
+  'MG Road Metro (Bengaluru, KA)',
+  'Koramangala 5th Block (Bengaluru)',
+  'T. Nagar Bus Terminus (Chennai, TN)',
+  'Marina Beach (Chennai, TN)',
+  'HITEC City (Hyderabad, TS)',
+  'Charminar (Hyderabad, TS)',
+  'Marine Drive Kochi (Kerala)',
+  // West Bengal & East
+  'Park Street Metro (Kolkata, WB)',
+  'Rabindra Sadan (Kolkata, WB)',
+  'Salt Lake Sector V (Kolkata, WB)',
+  'Howrah Railway Station (WB)',
+  'Patna Sahib Railway Hub (Bihar)',
+  'KIIT Chowk Bhubaneswar (Odisha)',
+  // North & Northeast
+  'Police Bazaar (Shillong, ML)',
+  'GS Road ABC Crossing (Guwahati, AS)',
+  'Lal Chowk (Srinagar, J&K)',
+  'Sector 17 Plaza (Chandigarh, UT)',
+  'Hazratganj GPO (Lucknow, UP)',
+  'Pink City Hawa Mahal (Jaipur, RJ)',
+  'Sabarmati Riverfront (Ahmedabad, GJ)'
 ];
 
 export const RoutePlannerView: React.FC<RoutePlannerViewProps> = ({
@@ -54,8 +59,8 @@ export const RoutePlannerView: React.FC<RoutePlannerViewProps> = ({
   isElderlyMode,
   disclaimerNotice
 }) => {
-  const [originText, setOriginText] = useState('Park Street Metro Station');
-  const [destText, setDestText] = useState('Rabindra Sadan Crossing');
+  const [originText, setOriginText] = useState('Connaught Place (Delhi)');
+  const [destText, setDestText] = useState('India Gate (New Delhi)');
   const [detourBudget, setDetourBudget] = useState(25);
 
   const [showOriginSuggestions, setShowOriginSuggestions] = useState(false);
@@ -63,11 +68,11 @@ export const RoutePlannerView: React.FC<RoutePlannerViewProps> = ({
 
   const selectedCandidate = candidates.find(c => c.id === selectedRouteId) || candidates[0];
 
-  const filteredOriginList = ALL_KOLKATA_LOCATIONS.filter(l =>
+  const filteredOriginList = ALL_INDIAN_LOCATIONS.filter(l =>
     l.toLowerCase().includes(originText.toLowerCase())
   );
 
-  const filteredDestList = ALL_KOLKATA_LOCATIONS.filter(l =>
+  const filteredDestList = ALL_INDIAN_LOCATIONS.filter(l =>
     l.toLowerCase().includes(destText.toLowerCase())
   );
 
@@ -90,11 +95,11 @@ export const RoutePlannerView: React.FC<RoutePlannerViewProps> = ({
           <div className="flex items-center space-x-2">
             <MapPin className="w-5 h-5 text-red-600" />
             <h2 className="text-base font-black text-slate-900 uppercase tracking-wide">
-              Kolkata Safe Location Search
+              Pan-India Safe Location Search
             </h2>
           </div>
           <span className="text-xs font-bold text-rose-600 bg-rose-100 px-3 py-1 rounded-full border border-rose-300">
-            Google Maps & Kolkata Police Data Active
+            28 States & 8 UTs Active • Google Maps & Police Open Data
           </span>
         </div>
 
@@ -113,7 +118,7 @@ export const RoutePlannerView: React.FC<RoutePlannerViewProps> = ({
             {/* Origin Search */}
             <div className="relative">
               <label className="block mb-1.5 font-bold text-xs uppercase tracking-wider text-slate-700">
-                Where are you starting from?
+                Where are you starting from in India?
               </label>
               <div className="relative">
                 <span className="absolute left-3.5 top-3.5 w-3 h-3 rounded-full bg-blue-500 ring-4 ring-blue-100" />
@@ -126,7 +131,7 @@ export const RoutePlannerView: React.FC<RoutePlannerViewProps> = ({
                   }}
                   onFocus={() => setShowOriginSuggestions(true)}
                   onBlur={() => setTimeout(() => setShowOriginSuggestions(false), 200)}
-                  placeholder="Search starting Kolkata location..."
+                  placeholder="Search starting location anywhere in India..."
                   className="w-full pl-9 pr-4 py-3 rounded-xl border-2 border-rose-300 bg-white text-slate-900 font-extrabold text-sm outline-none focus:border-red-600 focus:ring-4 focus:ring-red-100 transition-all shadow-sm"
                 />
               </div>
@@ -135,7 +140,7 @@ export const RoutePlannerView: React.FC<RoutePlannerViewProps> = ({
               {showOriginSuggestions && filteredOriginList.length > 0 && (
                 <div className="absolute left-0 right-0 top-20 bg-white border-2 border-rose-300 rounded-2xl shadow-2xl py-2 z-50 max-h-60 overflow-y-auto">
                   <div className="px-3 py-1 text-[10px] uppercase font-black text-rose-600 border-b border-rose-100 bg-rose-50">
-                    Google Maps Matching Locations
+                    Google Maps & India Landmark Locations
                   </div>
                   {filteredOriginList.map(place => (
                     <button
@@ -154,10 +159,10 @@ export const RoutePlannerView: React.FC<RoutePlannerViewProps> = ({
                 </div>
               )}
 
-              {/* Quick Kolkata Chips for Origin */}
+              {/* Quick India Chips for Origin */}
               <div className="flex flex-wrap gap-1.5 mt-2">
                 <span className="text-[10px] font-bold text-slate-400 self-center">Popular:</span>
-                {ALL_KOLKATA_LOCATIONS.slice(0, 3).map(chip => (
+                {['Connaught Place (Delhi)', 'Marine Drive (Mumbai, MH)', 'MG Road Metro (Bengaluru, KA)', 'Park Street Metro (Kolkata, WB)'].map(chip => (
                   <button
                     type="button"
                     key={`orig_${chip}`}
@@ -186,7 +191,7 @@ export const RoutePlannerView: React.FC<RoutePlannerViewProps> = ({
                   }}
                   onFocus={() => setShowDestSuggestions(true)}
                   onBlur={() => setTimeout(() => setShowDestSuggestions(false), 200)}
-                  placeholder="Search destination Kolkata location..."
+                  placeholder="Search destination anywhere in India..."
                   className="w-full pl-9 pr-4 py-3 rounded-xl border-2 border-rose-300 bg-white text-slate-900 font-extrabold text-sm outline-none focus:border-red-600 focus:ring-4 focus:ring-red-100 transition-all shadow-sm"
                 />
               </div>
@@ -195,7 +200,7 @@ export const RoutePlannerView: React.FC<RoutePlannerViewProps> = ({
               {showDestSuggestions && filteredDestList.length > 0 && (
                 <div className="absolute left-0 right-0 top-20 bg-white border-2 border-rose-300 rounded-2xl shadow-2xl py-2 z-50 max-h-60 overflow-y-auto">
                   <div className="px-3 py-1 text-[10px] uppercase font-black text-rose-600 border-b border-rose-100 bg-rose-50">
-                    Google Maps Matching Locations
+                    Google Maps & India Landmark Locations
                   </div>
                   {filteredDestList.map(place => (
                     <button
@@ -214,10 +219,10 @@ export const RoutePlannerView: React.FC<RoutePlannerViewProps> = ({
                 </div>
               )}
 
-              {/* Quick Kolkata Chips for Destination */}
+              {/* Quick India Chips for Destination */}
               <div className="flex flex-wrap gap-1.5 mt-2">
                 <span className="text-[10px] font-bold text-slate-400 self-center">Popular:</span>
-                {ALL_KOLKATA_LOCATIONS.slice(3, 6).map(chip => (
+                {['India Gate (New Delhi)', 'HITEC City (Hyderabad, TS)', 'Police Bazaar (Shillong, ML)', 'FC Road (Pune, MH)'].map(chip => (
                   <button
                     type="button"
                     key={`dest_${chip}`}
@@ -332,7 +337,7 @@ export const RoutePlannerView: React.FC<RoutePlannerViewProps> = ({
               <span>Ready to start: {selectedCandidate.name}</span>
             </div>
             <p className="text-xs text-rose-100 font-medium max-w-xl leading-relaxed">
-              Provides turn-by-turn guidance along well-lit Kolkata streets with live location check-ins to trusted family contacts.
+              Provides turn-by-turn guidance along well-lit Indian streets with live location check-ins to trusted family contacts.
             </p>
           </div>
 
@@ -341,7 +346,7 @@ export const RoutePlannerView: React.FC<RoutePlannerViewProps> = ({
             className="w-full md:w-auto px-8 py-4 rounded-2xl bg-white hover:bg-rose-50 text-red-600 font-black text-sm uppercase tracking-wider flex items-center justify-center space-x-2 shadow-2xl transition-all transform hover:scale-105"
           >
             <Navigation className="w-5 h-5 text-red-600" />
-            <span>Start Safe Kolkata Walk</span>
+            <span>Start Pan-India Safe Walk</span>
           </button>
         </div>
       )}
