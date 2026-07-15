@@ -27,7 +27,7 @@ export class ApiClient {
     const destName = typeof destination === 'string' ? destination : (destination.name || 'Destination');
 
     // 1. FIRST: Try Google Maps DirectionsService directly in browser (official road-snapped routes)
-    const googleRes = await this.fetchGoogleDirectionsBrowser(originName, destName);
+    const googleRes = await this.fetchGoogleDirectionsBrowser(origin, destination);
     if (googleRes && googleRes.routes.length > 0) {
       console.log('[SAHELI] ✅ Using official Google Maps walking directions');
       return googleRes;
@@ -35,7 +35,7 @@ export class ApiClient {
 
     // 2. SECOND: Try client-side OSRM (OpenStreetMap walking router)
     // NOTE: Skipping backend call (saheli-backend-api.onrender.com) as it returns stale data
-    const osrmRes = await this.getMockPanIndiaRoutes(originName, destName);
+    const osrmRes = await this.getMockPanIndiaRoutes(origin, destination);
     if (osrmRes && osrmRes.routes.length > 0) {
       return osrmRes;
     }
@@ -55,7 +55,7 @@ export class ApiClient {
       console.warn('[SAHELI] Backend unavailable, using client-side router');
     }
 
-    return this.getMockPanIndiaRoutes(originName, destName);
+    return this.getMockPanIndiaRoutes(origin, destination);
   }
 
   private static cleanPlaceName(name: string): string {
@@ -64,8 +64,8 @@ export class ApiClient {
   }
 
   private static fetchGoogleDirectionsBrowser(
-    origin: string,
-    dest: string
+    origin: string | { lat: number; lng: number; name?: string },
+    dest: string | { lat: number; lng: number; name?: string }
   ): Promise<{ routes: RouteCandidate[]; summaryNotice: string } | null> {
     return new Promise((resolve) => {
       if (
@@ -82,12 +82,21 @@ export class ApiClient {
       const timer = setTimeout(() => resolve(null), 8000);
 
       try {
-        const cleanOrigin = this.cleanPlaceName(origin);
-        const cleanDest = this.cleanPlaceName(dest);
-        const originQuery = cleanOrigin.toLowerCase().includes('india') ? cleanOrigin : `${cleanOrigin}, India`;
-        const destQuery = cleanDest.toLowerCase().includes('india') ? cleanDest : `${cleanDest}, India`;
+        const cleanOrigin = typeof origin === 'string' ? this.cleanPlaceName(origin) : origin;
+        const cleanDest = typeof dest === 'string' ? this.cleanPlaceName(dest) : dest;
 
-        console.log(`[SAHELI] Google DirectionsService: "${originQuery}" → "${destQuery}"`);
+        const originQuery = typeof cleanOrigin === 'string'
+          ? (cleanOrigin.toLowerCase().includes('india') ? cleanOrigin : `${cleanOrigin}, India`)
+          : { lat: cleanOrigin.lat, lng: cleanOrigin.lng };
+
+        const destQuery = typeof cleanDest === 'string'
+          ? (cleanDest.toLowerCase().includes('india') ? cleanDest : `${cleanDest}, India`)
+          : { lat: cleanDest.lat, lng: cleanDest.lng };
+
+        const originLabel = typeof origin === 'string' ? origin : (origin.name || 'Origin');
+        const destLabel = typeof dest === 'string' ? dest : (dest.name || 'Destination');
+
+        console.log(`[SAHELI] Google DirectionsService:`, originQuery, `→`, destQuery);
 
         const ds = new window.google.maps.DirectionsService();
         ds.route(
@@ -119,7 +128,7 @@ export class ApiClient {
                   const duration = leg ? Math.round(leg.duration.value / 60) : 15;
                   routes.push({
                     id: `route_google_${idx}`,
-                    name: `${origin} → ${dest} (${r.summary || cfg.label})`,
+                    name: `${originLabel} → ${destLabel} (${r.summary || cfg.label})`,
                     isRecommended: idx === 0,
                     tag: cfg.tag,
                     distanceMeters: dist,
@@ -142,7 +151,7 @@ export class ApiClient {
                   const baseDur = routes[0].durationMinutes;
                   routes.push({
                     id: `route_variant_${idx}`,
-                    name: `${origin} → ${dest} (${cfg.label})`,
+                    name: `${originLabel} → ${destLabel} (${cfg.label})`,
                     isRecommended: false,
                     tag: cfg.tag,
                     distanceMeters: idx === 1 ? Math.round(baseDist * 0.82) : Math.round(baseDist * 1.12),
@@ -286,9 +295,12 @@ export class ApiClient {
   }
 
   private static async getMockPanIndiaRoutes(
-    originName: string,
-    destName: string
+    origin: string | { lat: number; lng: number; name?: string },
+    dest: string | { lat: number; lng: number; name?: string }
   ): Promise<{ routes: RouteCandidate[]; summaryNotice: string }> {
+    const originLabel = typeof origin === 'string' ? origin : (origin.name || 'Origin');
+    const destLabel = typeof dest === 'string' ? dest : (dest.name || 'Destination');
+
     const LANDMARKS: Record<string, { lat: number; lng: number }> = {
       'Connaught Place (Delhi)': { lat: 28.6315, lng: 77.2167 },
       'India Gate (New Delhi)': { lat: 28.6129, lng: 77.2295 },
@@ -309,9 +321,13 @@ export class ApiClient {
     };
 
     const resolveClient = async (
-      name: string,
+      loc: string | { lat: number; lng: number; name?: string },
       anchor?: { lat: number; lng: number }
     ): Promise<{ lat: number; lng: number }> => {
+      if (typeof loc !== 'string') {
+        return { lat: loc.lat, lng: loc.lng };
+      }
+      const name = loc;
       const cleanName = name.toLowerCase().replace(/[^a-z0-9]/g, '');
       for (const [key, coords] of Object.entries(LANDMARKS)) {
         const cleanKey = key.toLowerCase().replace(/[^a-z0-9]/g, '');
@@ -361,8 +377,8 @@ export class ApiClient {
       return { lat: 28.6315, lng: 77.2167 };
     };
 
-    const origPt = await resolveClient(originName);
-    const destPt = await resolveClient(destName, origPt);
+    const origPt = await resolveClient(origin);
+    const destPt = await resolveClient(dest, origPt);
 
     // Try OpenStreetMap OSRM Walking Directions in browser
     try {
@@ -384,7 +400,7 @@ export class ApiClient {
               const duration = Math.max(3, Math.round(r.duration / 60));
               routes.push({
                 id: `route_osrm_${idx}`,
-                name: `${originName} → ${destName} (${cfg.label})`,
+                name: `${originLabel} → ${destLabel} (${cfg.label})`,
                 isRecommended: idx === 0,
                 tag: cfg.tag,
                 distanceMeters: dist,
@@ -407,7 +423,7 @@ export class ApiClient {
               const baseDur = routes[0].durationMinutes;
               routes.push({
                 id: `route_osrm_variant_${idx}`,
-                name: `${originName} → ${destName} (${cfg.label})`,
+                name: `${originLabel} → ${destLabel} (${cfg.label})`,
                 isRecommended: false,
                 tag: cfg.tag,
                 distanceMeters: idx === 1 ? Math.round(baseDist * 0.82) : Math.round(baseDist * 1.12),
@@ -443,7 +459,7 @@ export class ApiClient {
       summaryNotice: '📍 Pan-India Safety Navigation active across 28 States & 8 Union Territories.',
       routes: ROUTE_CONFIGS.map((cfg, idx) => ({
         id: `route_fallback_${idx}`,
-        name: `${originName} → ${destName} (${cfg.label})`,
+        name: `${originLabel} → ${destLabel} (${cfg.label})`,
         isRecommended: idx === 0,
         tag: cfg.tag,
         distanceMeters: idx === 0 ? 1750 : (idx === 1 ? 1200 : 2100),
