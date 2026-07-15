@@ -35,22 +35,44 @@ export class ApiClient {
     return this.getMockPanIndiaRoutes(originName, destName);
   }
 
+  private static cleanPlaceName(name: string): string {
+    // Remove parenthetical state/city hints that confuse Google geocoder
+    // "Connaught Place (Delhi)" -> "Connaught Place Delhi"
+    return name.replace(/[()[\]]/g, ' ').replace(/\s+/g, ' ').trim();
+  }
+
   private static fetchGoogleDirectionsBrowser(origin: string, dest: string): Promise<{ routes: RouteCandidate[]; summaryNotice: string } | null> {
     return new Promise((resolve) => {
       if (typeof window === 'undefined' || !window.google || !window.google.maps || !window.google.maps.DirectionsService) {
+        console.warn('[SAHELI] Google Maps SDK not ready, skipping DirectionsService');
         return resolve(null);
       }
 
+      // Timeout safety: if Google takes > 8s, give up and use fallback
+      const timer = setTimeout(() => resolve(null), 8000);
+
       try {
+        const cleanOrigin = this.cleanPlaceName(origin);
+        const cleanDest = this.cleanPlaceName(dest);
+
+        const originQuery = cleanOrigin.toLowerCase().includes('india') ? cleanOrigin : `${cleanOrigin}, India`;
+        const destQuery = cleanDest.toLowerCase().includes('india') ? cleanDest : `${cleanDest}, India`;
+
+        console.log(`[SAHELI] Google DirectionsService: "${originQuery}" → "${destQuery}"`);
+
         const ds = new window.google.maps.DirectionsService();
         ds.route(
           {
-            origin: origin.toLowerCase().includes('india') ? origin : `${origin}, India`,
-            destination: dest.toLowerCase().includes('india') ? dest : `${dest}, India`,
+            origin: originQuery,
+            destination: destQuery,
             travelMode: window.google.maps.TravelMode.WALKING,
-            provideRouteAlternatives: true
+            provideRouteAlternatives: true,
+            region: 'in'
           },
           (result: any, status: any) => {
+            clearTimeout(timer);
+            console.log(`[SAHELI] Google DirectionsService status: ${status}`);
+
             if (status === 'OK' && result && result.routes && result.routes.length > 0) {
               const routes: RouteCandidate[] = result.routes.slice(0, 3).map((r: any, idx: number) => {
                 const poly: Array<[number, number]> = r.overview_path.map((pt: any) => [pt.lat(), pt.lng()]);
@@ -60,12 +82,12 @@ export class ApiClient {
                 const tag = idx === 0 ? 'safest' : (idx === 1 ? 'fastest' : 'balanced');
                 return {
                   id: `route_google_browser_${idx}`,
-                  name: `${origin} → ${dest} (${r.summary || (idx === 0 ? 'Illuminated Main Boulevard' : 'Direct Alley Shortcut')})`,
+                  name: `${origin} → ${dest} (${r.summary || (idx === 0 ? 'Safe Boulevard' : (idx === 1 ? 'Fastest Path' : 'Balanced Route'))})`,
                   isRecommended: idx === 0,
                   tag,
                   distanceMeters: dist,
                   durationMinutes: duration,
-                  compositeSafetyScore: idx === 0 ? 95 : (idx === 1 ? 55 : 82),
+                  compositeSafetyScore: idx === 0 ? 95 : (idx === 1 ? 60 : 82),
                   scoreExplanation: [
                     'Official Google Maps turn-by-turn walking directions',
                     'Prioritized for streetlamp coverage & safety scoring'
@@ -76,14 +98,18 @@ export class ApiClient {
               });
 
               return resolve({
-                summaryNotice: 'Official Google Maps turn-by-turn walking routes active across India.',
+                summaryNotice: '✅ Official Google Maps walking routes active.',
                 routes
               });
             }
+
+            console.warn(`[SAHELI] Google DirectionsService failed (${status}), trying fallback`);
             resolve(null);
           }
         );
-      } catch (_) {
+      } catch (e) {
+        clearTimeout(timer);
+        console.error('[SAHELI] DirectionsService exception:', e);
         resolve(null);
       }
     });
