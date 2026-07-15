@@ -74,8 +74,8 @@ export const MapViewCanvas: React.FC<MapViewCanvasProps> = ({
   candidates.forEach(c => c.geoJsonPolyline.forEach(pt => allPts.push(pt)));
   if (searchResultPin) allPts.push([searchResultPin.lat, searchResultPin.lng]);
 
-  let baseLat = 22.5500;
-  let baseLng = 88.3500;
+  let baseLat = 28.6315;
+  let baseLng = 77.2167;
   let scaleFactor = 32000;
 
   if (allPts.length > 0) {

@@ -61,10 +61,10 @@ export const GoogleMapViewCanvas: React.FC<GoogleMapViewCanvasProps> = (props) =
     if (!mapsLoaded || !mapRef.current) return;
 
     if (!googleMapInstance.current) {
-      const initialCenter = userLocation || activeJourneyLocation || { lat: 22.5500, lng: 88.3500 };
+      const initialCenter = userLocation || activeJourneyLocation || { lat: 28.6315, lng: 77.2167 };
       googleMapInstance.current = new window.google.maps.Map(mapRef.current, {
         center: initialCenter,
-        zoom: 15,
+        zoom: 14,
         mapTypeId: window.google.maps.MapTypeId.ROADMAP,
         disableDefaultUI: false,
         zoomControl: true,
