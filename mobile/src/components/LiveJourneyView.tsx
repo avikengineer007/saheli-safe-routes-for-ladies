@@ -137,7 +137,7 @@ export const LiveJourneyView: React.FC<LiveJourneyViewProps> = ({
                 <Clock className="w-3.5 h-3.5 text-red-500" />
                 <span>Estimated Time: ~{journey.etaMinutes} minutes</span>
                 <span>•</span>
-                <span>Live Kolkata GPS Active</span>
+                <span>Live Pan-India GPS Active</span>
               </p>
             </div>
           </div>

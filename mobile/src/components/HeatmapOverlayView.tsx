@@ -14,19 +14,19 @@ export const HeatmapOverlayView: React.FC<HeatmapOverlayViewProps> = ({ points }
         <div className="flex items-center space-x-2">
           <Flame className="w-5 h-5 text-red-600 animate-pulse" />
           <h3 className="font-extrabold text-slate-900 text-lg">
-            Kolkata Community Safety Map Signals
+            Pan-India Community Safety Map Signals
           </h3>
         </div>
         <span className="text-xs font-bold text-red-600 bg-rose-100 px-3 py-1 rounded-full border border-rose-300">
-          {points.length} Kolkata Hotspots Active
+          {points.length} Active Hotspots in India
         </span>
       </div>
 
       <p className="text-xs text-slate-600 font-medium leading-relaxed">
-        Spatial density heatmap rendering verified crowdsourced community reports across Kolkata sectors. Older reports decay automatically so real-time signals take priority.
+        Spatial density heatmap rendering verified crowdsourced community reports across Indian sectors. Older reports decay automatically so real-time signals take priority.
       </p>
 
-      {/* Grid of verified Kolkata signals */}
+      {/* Grid of verified India signals */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
         {points.map((pt, idx) => (
           <div key={idx} className="p-3.5 rounded-2xl bg-rose-50/60 border border-rose-200 flex items-center justify-between text-xs">

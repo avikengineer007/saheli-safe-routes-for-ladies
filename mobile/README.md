@@ -1,2 +1,3 @@
-# saheli-safe-routes-for-ladies
-🛡️ SAHELI — Women's safety navigation app for Kolkata. Finds well-lit safe walking routes, tracks live GPS, sends 1-tap SOS alerts to family contacts, and works as an installable mobile app (PWA). Built with React, TypeScript, Google Maps &amp; Claude AI.
+# SAHELI — Pan-India Women & Sister Safety Routes
+🛡️ **SAHELI — YOUR SAFETY ROUTE, YOUR VOICE**
+Nationwide safety navigation app covering all 28 States & 8 Union Territories across India. Calculates safe walking routes prioritized by street lighting, foot traffic, and open crime data; tracks live GPS with off-route deviation alerts; dispatches 1-tap emergency SOS to family contacts & National Helplines (112, 1091, 181); and provides a high-contrast Elderly Companion Mode. Built with React, TypeScript, Google Maps API, and Claude AI.
