@@ -1,6 +1,8 @@
 import { RouteCandidate, ActiveJourney, HeatmapPoint } from '../types';
 
-const API_BASE_URL = 'http://localhost:4000/api';
+const API_BASE_URL = typeof window !== 'undefined' && window.location.hostname === 'localhost'
+  ? 'http://localhost:4000/api'
+  : 'https://saheli-backend-api.onrender.com/api';
 
 export class ApiClient {
   public static async fetchSafeRoutes(
