@@ -1,15 +1,17 @@
 import React, { useState } from 'react';
 import { RouteCandidate } from '../types';
-import { Shield, Clock, Navigation, CheckCircle2, AlertTriangle, MapPin, Sparkles, Sliders } from 'lucide-react';
+import { Shield, Clock, Navigation, CheckCircle2, AlertTriangle, MapPin, Sparkles, Sliders, LocateFixed } from 'lucide-react';
+import { PlaceSearchInput } from './PlaceSearchInput';
 
 interface RoutePlannerViewProps {
   candidates: RouteCandidate[];
   selectedRouteId: string;
   onSelectRoute: (id: string) => void;
-  onCalculateRoutes: (originName: string, destName: string, budget: number) => void;
+  onCalculateRoutes: (originName: string, destName: string, budget: number, originCoords?: { lat: number; lng: number }, destCoords?: { lat: number; lng: number }) => void;
   onStartJourney: (route: RouteCandidate) => void;
   isElderlyMode: boolean;
   disclaimerNotice?: string;
+  userLocation?: { lat: number; lng: number };
 }
 
 const ALL_INDIAN_LOCATIONS = [
@@ -57,34 +59,16 @@ export const RoutePlannerView: React.FC<RoutePlannerViewProps> = ({
   onCalculateRoutes,
   onStartJourney,
   isElderlyMode,
-  disclaimerNotice
+  disclaimerNotice,
+  userLocation
 }) => {
   const [originText, setOriginText] = useState('Connaught Place (Delhi)');
   const [destText, setDestText] = useState('India Gate (New Delhi)');
+  const [originCoords, setOriginCoords] = useState<{ lat: number; lng: number } | undefined>();
+  const [destCoords, setDestCoords] = useState<{ lat: number; lng: number } | undefined>();
   const [detourBudget, setDetourBudget] = useState(25);
 
-  const [showOriginSuggestions, setShowOriginSuggestions] = useState(false);
-  const [showDestSuggestions, setShowDestSuggestions] = useState(false);
-
   const selectedCandidate = candidates.find(c => c.id === selectedRouteId) || candidates[0];
-
-  const filteredOriginList = ALL_INDIAN_LOCATIONS.filter(l =>
-    l.toLowerCase().includes(originText.toLowerCase())
-  );
-
-  const filteredDestList = ALL_INDIAN_LOCATIONS.filter(l =>
-    l.toLowerCase().includes(destText.toLowerCase())
-  );
-
-  const handleChipClick = (target: 'origin' | 'dest', label: string) => {
-    if (target === 'origin') {
-      setOriginText(label);
-      setShowOriginSuggestions(false);
-    } else {
-      setDestText(label);
-      setShowDestSuggestions(false);
-    }
-  };
 
   return (
     <div className="space-y-4">
@@ -103,137 +87,58 @@ export const RoutePlannerView: React.FC<RoutePlannerViewProps> = ({
           </span>
         </div>
 
-        {/* Input Controls with Autocomplete Dropdowns */}
+        {/* Input Controls with Smart Place Search */}
         <form
           onSubmit={(e) => {
             e.preventDefault();
-            setShowOriginSuggestions(false);
-            setShowDestSuggestions(false);
-            onCalculateRoutes(originText, destText, detourBudget);
+            onCalculateRoutes(originText, destText, detourBudget, originCoords, destCoords);
           }}
           className="space-y-4"
         >
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            
-            {/* Origin Search */}
-            <div className="relative">
-              <label className="block mb-1.5 font-bold text-xs uppercase tracking-wider text-slate-700">
-                Where are you starting from in India?
-              </label>
-              <div className="relative">
-                <span className="absolute left-3.5 top-3.5 w-3 h-3 rounded-full bg-blue-500 ring-4 ring-blue-100" />
-                <input
-                  type="text"
-                  value={originText}
-                  onChange={e => {
-                    setOriginText(e.target.value);
-                    setShowOriginSuggestions(true);
-                  }}
-                  onFocus={() => setShowOriginSuggestions(true)}
-                  onBlur={() => setTimeout(() => setShowOriginSuggestions(false), 200)}
-                  placeholder="Search starting location anywhere in India..."
-                  className="w-full pl-9 pr-4 py-3 rounded-xl border-2 border-rose-300 bg-white text-slate-900 font-extrabold text-sm outline-none focus:border-red-600 focus:ring-4 focus:ring-red-100 transition-all shadow-sm"
-                />
-              </div>
-
-              {/* Origin Autocomplete Menu */}
-              {showOriginSuggestions && filteredOriginList.length > 0 && (
-                <div className="absolute left-0 right-0 top-20 bg-white border-2 border-rose-300 rounded-2xl shadow-2xl py-2 z-50 max-h-60 overflow-y-auto">
-                  <div className="px-3 py-1 text-[10px] uppercase font-black text-rose-600 border-b border-rose-100 bg-rose-50">
-                    Google Maps & India Landmark Locations
-                  </div>
-                  {filteredOriginList.map(place => (
-                    <button
-                      type="button"
-                      key={`orig_sug_${place}`}
-                      onClick={() => {
-                        setOriginText(place);
-                        setShowOriginSuggestions(false);
-                      }}
-                      className="w-full text-left px-4 py-2.5 text-xs font-bold text-slate-800 hover:bg-rose-500 hover:text-white flex items-center justify-between border-b border-slate-100 transition-colors"
-                    >
-                      <span>📍 {place}</span>
-                      <span className="text-[10px] opacity-75">Select</span>
-                    </button>
-                  ))}
-                </div>
-              )}
-
-              {/* Quick India Chips for Origin */}
-              <div className="flex flex-wrap gap-1.5 mt-2">
-                <span className="text-[10px] font-bold text-slate-400 self-center">Popular:</span>
-                {['Connaught Place (Delhi)', 'Marine Drive (Mumbai, MH)', 'MG Road Metro (Bengaluru, KA)', 'Park Street Metro (Kolkata, WB)'].map(chip => (
-                  <button
-                    type="button"
-                    key={`orig_${chip}`}
-                    onClick={() => handleChipClick('origin', chip)}
-                    className="px-2.5 py-0.5 rounded-lg bg-rose-100 hover:bg-rose-200 border border-rose-300 text-rose-900 text-[11px] font-extrabold transition-colors"
-                  >
-                    {chip}
-                  </button>
-                ))}
-              </div>
+          {/* GPS Quick-Start Banner */}
+          <div className="flex items-start space-x-3 p-3 rounded-xl bg-gradient-to-r from-blue-50 to-rose-50 border border-blue-200">
+            <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center shrink-0 shadow-sm">
+              <LocateFixed className="w-4 h-4 text-white" />
             </div>
+            <div className="text-xs text-slate-700 font-medium leading-relaxed">
+              <span className="font-extrabold text-blue-700">New!</span> Type any place in India or tap{' '}
+              <span className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-md bg-red-600 text-white text-[10px] font-black uppercase">
+                <Navigation className="w-2.5 h-2.5" />
+                <span>My Location</span>
+              </span>{' '}
+              to auto-fill your current GPS position as the starting point.
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            {/* Origin Search with GPS */}
+            <PlaceSearchInput
+              id="origin-search"
+              label="Where are you starting from?"
+              value={originText}
+              onChange={(val, coords) => {
+                setOriginText(val);
+                setOriginCoords(coords);
+              }}
+              placeholder="Search starting location in India..."
+              dotColor="blue"
+              showGpsButton={true}
+              userLocation={userLocation}
+            />
 
             {/* Destination Search */}
-            <div className="relative">
-              <label className="block mb-1.5 font-bold text-xs uppercase tracking-wider text-slate-700">
-                Where do you want to go safely?
-              </label>
-              <div className="relative">
-                <span className="absolute left-3.5 top-3.5 w-3 h-3 rounded-full bg-red-600 ring-4 ring-red-100" />
-                <input
-                  type="text"
-                  value={destText}
-                  onChange={e => {
-                    setDestText(e.target.value);
-                    setShowDestSuggestions(true);
-                  }}
-                  onFocus={() => setShowDestSuggestions(true)}
-                  onBlur={() => setTimeout(() => setShowDestSuggestions(false), 200)}
-                  placeholder="Search destination anywhere in India..."
-                  className="w-full pl-9 pr-4 py-3 rounded-xl border-2 border-rose-300 bg-white text-slate-900 font-extrabold text-sm outline-none focus:border-red-600 focus:ring-4 focus:ring-red-100 transition-all shadow-sm"
-                />
-              </div>
-
-              {/* Destination Autocomplete Menu */}
-              {showDestSuggestions && filteredDestList.length > 0 && (
-                <div className="absolute left-0 right-0 top-20 bg-white border-2 border-rose-300 rounded-2xl shadow-2xl py-2 z-50 max-h-60 overflow-y-auto">
-                  <div className="px-3 py-1 text-[10px] uppercase font-black text-rose-600 border-b border-rose-100 bg-rose-50">
-                    Google Maps & India Landmark Locations
-                  </div>
-                  {filteredDestList.map(place => (
-                    <button
-                      type="button"
-                      key={`dest_sug_${place}`}
-                      onClick={() => {
-                        setDestText(place);
-                        setShowDestSuggestions(false);
-                      }}
-                      className="w-full text-left px-4 py-2.5 text-xs font-bold text-slate-800 hover:bg-rose-500 hover:text-white flex items-center justify-between border-b border-slate-100 transition-colors"
-                    >
-                      <span>📍 {place}</span>
-                      <span className="text-[10px] opacity-75">Select</span>
-                    </button>
-                  ))}
-                </div>
-              )}
-
-              {/* Quick India Chips for Destination */}
-              <div className="flex flex-wrap gap-1.5 mt-2">
-                <span className="text-[10px] font-bold text-slate-400 self-center">Popular:</span>
-                {['India Gate (New Delhi)', 'HITEC City (Hyderabad, TS)', 'Police Bazaar (Shillong, ML)', 'FC Road (Pune, MH)'].map(chip => (
-                  <button
-                    type="button"
-                    key={`dest_${chip}`}
-                    onClick={() => handleChipClick('dest', chip)}
-                    className="px-2.5 py-0.5 rounded-lg bg-rose-100 hover:bg-rose-200 border border-rose-300 text-rose-900 text-[11px] font-extrabold transition-colors"
-                  >
-                    {chip}
-                  </button>
-                ))}
-              </div>
-            </div>
+            <PlaceSearchInput
+              id="destination-search"
+              label="Where do you want to go safely?"
+              value={destText}
+              onChange={(val, coords) => {
+                setDestText(val);
+                setDestCoords(coords);
+              }}
+              placeholder="Search destination in India..."
+              dotColor="red"
+              showGpsButton={false}
+            />
           </div>
 
           {/* Detour Safety Preference Slider */}
@@ -254,7 +159,7 @@ export const RoutePlannerView: React.FC<RoutePlannerViewProps> = ({
               />
               <button
                 type="submit"
-                className="px-5 py-2.5 rounded-xl font-extrabold text-xs uppercase tracking-wider bg-gradient-to-r from-red-600 to-rose-500 hover:from-red-500 hover:to-rose-400 text-white shadow-md shadow-red-500/25 transition-all shrink-0"
+                className="px-5 py-2.5 rounded-xl font-extrabold text-xs uppercase tracking-wider bg-gradient-to-r from-red-600 to-rose-500 hover:from-red-500 hover:to-rose-400 text-white shadow-md shadow-red-500/25 transition-all shrink-0 hover:scale-105 active:scale-95"
               >
                 Find Safest Path
               </button>

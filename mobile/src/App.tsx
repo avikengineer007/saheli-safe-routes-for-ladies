@@ -82,10 +82,20 @@ const MainAppContent: React.FC = () => {
     setHeatmapPoints(pts);
   };
 
-  const handleCalculateRoutes = async (originName: string, destName: string, budget: number) => {
+  const handleCalculateRoutes = async (
+    originName: string,
+    destName: string,
+    budget: number,
+    originCoords?: { lat: number; lng: number },
+    destCoords?: { lat: number; lng: number }
+  ) => {
+    // Use pinpointed coordinates directly if available, otherwise resolve by name
+    const origin = originCoords ? { ...originCoords, name: originName } : originName;
+    const destination = destCoords ? { ...destCoords, name: destName } : destName;
+
     const res = await ApiClient.fetchSafeRoutes(
-      originName,
-      destName,
+      origin,
+      destination,
       budget
     );
     setCandidates(res.routes);
@@ -265,6 +275,7 @@ const MainAppContent: React.FC = () => {
                 onStartJourney={handleStartJourney}
                 isElderlyMode={false}
                 disclaimerNotice={disclaimerNotice}
+                userLocation={userLocation}
               />
             )}
 
