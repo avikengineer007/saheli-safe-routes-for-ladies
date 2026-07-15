@@ -67,6 +67,15 @@ export const RoutePlannerView: React.FC<RoutePlannerViewProps> = ({
   const [originCoords, setOriginCoords] = useState<{ lat: number; lng: number } | undefined>();
   const [destCoords, setDestCoords] = useState<{ lat: number; lng: number } | undefined>();
   const [detourBudget, setDetourBudget] = useState(25);
+  const [hasInitializedLocation, setHasInitializedLocation] = useState(false);
+
+  React.useEffect(() => {
+    if (userLocation && !hasInitializedLocation) {
+      setOriginText('My Current Location');
+      setOriginCoords(userLocation);
+      setHasInitializedLocation(true);
+    }
+  }, [userLocation, hasInitializedLocation]);
 
   const selectedCandidate = candidates.find(c => c.id === selectedRouteId) || candidates[0];
 
