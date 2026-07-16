@@ -362,41 +362,16 @@ export class RoutingService {
     origin: { lat: number; lng: number; name?: string },
     dest: { lat: number; lng: number; name?: string }
   ): Array<{ id: string; name: string; polyline: Array<[number, number]> }> {
-    const dLat = dest.lat - origin.lat;
-    const dLng = dest.lng - origin.lng;
-
     const origLabel = origin.name || 'Origin';
     const destLabel = dest.name || 'Destination';
 
-    // Route 1: Well-Lit Main Arterial Boulevard
-    const safestPath: Array<[number, number]> = [
-      [origin.lat, origin.lng],
-      [origin.lat + dLat * 0.25, origin.lng + dLng * 0.55],
-      [origin.lat + dLat * 0.65, origin.lng + dLng * 0.85],
-      [origin.lat + dLat * 0.90, origin.lng + dLng * 0.45],
-      [dest.lat, dest.lng]
-    ];
-
-    // Route 2: Direct Alley Shortcut (Darker side lanes)
     const directPath: Array<[number, number]> = [
       [origin.lat, origin.lng],
-      [origin.lat + dLat * 0.4, origin.lng + dLng * 0.2],
-      [origin.lat + dLat * 0.7, origin.lng + dLng * 0.6],
-      [dest.lat, dest.lng]
-    ];
-
-    // Route 3: Commercial Promenade
-    const commercialPath: Array<[number, number]> = [
-      [origin.lat, origin.lng],
-      [origin.lat + dLat * 0.15, origin.lng + dLng * 0.35],
-      [origin.lat + dLat * 0.55, origin.lng + dLng * 0.70],
       [dest.lat, dest.lng]
     ];
 
     return [
-      { id: 'route_india_main', name: `${origLabel} → ${destLabel} (Well-Lit Main Road)`, polyline: safestPath },
-      { id: 'route_india_shortcut', name: `${origLabel} → ${destLabel} (Direct Alley Shortcut)`, polyline: directPath },
-      { id: 'route_india_commercial', name: `${origLabel} → ${destLabel} (Commercial Promenade)`, polyline: commercialPath }
+      { id: 'route_india_direct', name: `${origLabel} → ${destLabel} (Direct Walking Route)`, polyline: directPath }
     ];
   }
 

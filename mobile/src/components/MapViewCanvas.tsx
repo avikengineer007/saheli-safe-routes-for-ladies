@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { RouteCandidate, HeatmapPoint } from '../types';
 
 interface MapViewCanvasProps {
@@ -7,6 +7,7 @@ interface MapViewCanvasProps {
   onSelectRoute?: (routeId: string) => void;
   heatmapPoints: HeatmapPoint[];
   showHeatmap: boolean;
+  userLocation?: { lat: number; lng: number };
   activeJourneyLocation?: { lat: number; lng: number };
   isDeviated?: boolean;
   isElderlyMode?: boolean;
@@ -19,349 +20,200 @@ export const MapViewCanvas: React.FC<MapViewCanvasProps> = ({
   onSelectRoute,
   heatmapPoints,
   showHeatmap,
+  userLocation,
   activeJourneyLocation,
   isDeviated,
   isElderlyMode,
   onMapClick
 }) => {
-  const [searchQuery, setSearchQuery] = React.useState('');
-  const [searchResultPin, setSearchResultPin] = React.useState<{ lat: number; lng: number; name: string } | null>(null);
-  const [showSuggestions, setShowSuggestions] = React.useState(false);
+  const mapContainerRef = useRef<HTMLDivElement>(null);
+  const leafletMapRef = useRef<any>(null);
+  const layersGroupRef = useRef<any>(null);
 
-  const LANDMARKS = [
-    // Delhi NCR
-    { name: 'Connaught Place (Delhi)', lat: 28.6315, lng: 77.2167 },
-    { name: 'India Gate (New Delhi)', lat: 28.6129, lng: 77.2295 },
-    { name: 'Hauz Khas Village (Delhi)', lat: 28.5494, lng: 77.1960 },
-    { name: 'Cyber City (Gurugram, HR)', lat: 28.4950, lng: 77.0895 },
-    { name: 'Noida Sector 18 (UP)', lat: 28.5708, lng: 77.3261 },
-    // Maharashtra & West
-    { name: 'Marine Drive (Mumbai, MH)', lat: 18.9438, lng: 72.8232 },
-    { name: 'Gateway of India (Mumbai)', lat: 18.9220, lng: 72.8347 },
-    { name: 'Bandra Kurla Complex (BKC, Mumbai)', lat: 19.0657, lng: 72.8686 },
-    { name: 'FC Road (Pune, MH)', lat: 18.5204, lng: 73.8416 },
-    { name: 'Pink City Hawa Mahal (Jaipur, RJ)', lat: 26.9239, lng: 75.8267 },
-    { name: 'Sabarmati Riverfront (Ahmedabad, GJ)', lat: 23.0300, lng: 72.5800 },
-    // Karnataka & South
-    { name: 'MG Road Metro (Bengaluru, KA)', lat: 12.9756, lng: 77.6066 },
-    { name: 'Koramangala 5th Block (Bengaluru)', lat: 12.9352, lng: 77.6245 },
-    { name: 'T. Nagar Bus Terminus (Chennai, TN)', lat: 13.0418, lng: 80.2341 },
-    { name: 'Marina Beach (Chennai, TN)', lat: 13.0500, lng: 80.2824 },
-    { name: 'HITEC City (Hyderabad, TS)', lat: 17.4435, lng: 78.3772 },
-    { name: 'Charminar (Hyderabad, TS)', lat: 17.3616, lng: 78.4747 },
-    { name: 'Marine Drive Kochi (Kerala)', lat: 9.9784, lng: 76.2753 },
-    // West Bengal & East
-    { name: 'Park Street Metro (Kolkata, WB)', lat: 22.5552, lng: 88.3510 },
-    { name: 'Rabindra Sadan (Kolkata, WB)', lat: 22.5416, lng: 88.3475 },
-    { name: 'Salt Lake Sector V (Kolkata, WB)', lat: 22.5731, lng: 88.4337 },
-    { name: 'Howrah Railway Station (WB)', lat: 22.5839, lng: 88.3430 },
-    { name: 'Patna Sahib Railway Hub (Bihar)', lat: 25.6110, lng: 85.2285 },
-    { name: 'KIIT Chowk Bhubaneswar (Odisha)', lat: 20.3533, lng: 85.8189 },
-    // Northeast & North
-    { name: 'Police Bazaar (Shillong, ML)', lat: 25.5760, lng: 91.8847 },
-    { name: 'GS Road ABC Crossing (Guwahati, AS)', lat: 26.1554, lng: 91.7783 },
-    { name: 'Lal Chowk (Srinagar, J&K)', lat: 34.0713, lng: 74.8078 },
-    { name: 'Sector 17 Plaza (Chandigarh, UT)', lat: 30.7398, lng: 76.7827 },
-    { name: 'Hazratganj GPO (Lucknow, UP)', lat: 26.8467, lng: 80.9462 }
-  ];
+  // Initialize Leaflet Map Instance
+  useEffect(() => {
+    if (!mapContainerRef.current) return;
 
-  const suggestions = searchQuery.trim()
-    ? LANDMARKS.filter(l => l.name.toLowerCase().includes(searchQuery.toLowerCase()))
-    : LANDMARKS;
+    if (!leafletMapRef.current) {
+      const Leaflet = (window as any).L;
+      if (!Leaflet) return;
 
-  // Calculate dynamic center & bounding box from candidate routes or search pin
-  const allPts: Array<[number, number]> = [];
-  candidates.forEach(c => c.geoJsonPolyline.forEach(pt => allPts.push(pt)));
-  if (searchResultPin) allPts.push([searchResultPin.lat, searchResultPin.lng]);
+      const initialCenter = activeJourneyLocation || userLocation || { lat: 28.6315, lng: 77.2167 };
+      
+      const map = Leaflet.map(mapContainerRef.current, {
+        center: [initialCenter.lat, initialCenter.lng],
+        zoom: 13,
+        zoomControl: true
+      });
 
-  let baseLat = 28.6315;
-  let baseLng = 77.2167;
-  let scaleFactor = 32000;
+      // CartoDB Voyager OpenStreetMap Tiles (Ultra-clear high-contrast road map)
+      Leaflet.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+        subdomains: 'abcd',
+        maxZoom: 19
+      }).addTo(map);
 
-  if (allPts.length > 0) {
-    const lats = allPts.map(p => p[0]);
-    const lngs = allPts.map(p => p[1]);
-    const minLat = Math.min(...lats);
-    const maxLat = Math.max(...lats);
-    const minLng = Math.min(...lngs);
-    const maxLng = Math.max(...lngs);
+      layersGroupRef.current = Leaflet.layerGroup().addTo(map);
 
-    baseLat = (minLat + maxLat) / 2;
-    baseLng = (minLng + maxLng) / 2;
+      map.on('click', (e: any) => {
+        if (e.latlng && onMapClick) {
+          onMapClick(e.latlng.lat, e.latlng.lng);
+        }
+      });
 
-    const latSpan = Math.max(0.015, maxLat - minLat);
-    const lngSpan = Math.max(0.015, maxLng - minLng);
-
-    const scaleY = 380 / latSpan;
-    const scaleX = 680 / lngSpan;
-    scaleFactor = Math.min(scaleX, scaleY, 45000);
-  }
-
-  const projectCoords = (lat: number, lng: number): [number, number] => {
-    const x = 400 + (lng - baseLng) * scaleFactor;
-    const y = 250 - (lat - baseLat) * scaleFactor;
-    return [Math.max(30, Math.min(770, x)), Math.max(30, Math.min(470, y))];
-  };
-
-  const handleSelectPlace = (place: { lat: number; lng: number; name: string }) => {
-    setSearchQuery(place.name);
-    setSearchResultPin(place);
-    setShowSuggestions(false);
-    if (onMapClick) {
-      onMapClick(place.lat, place.lng);
+      leafletMapRef.current = map;
     }
-  };
 
-  const handleSvgClick = (e: React.MouseEvent<SVGSVGElement>) => {
-    if (!onMapClick) return;
-    const rect = e.currentTarget.getBoundingClientRect();
-    const clickX = e.clientX - rect.left;
-    const clickY = e.clientY - rect.top;
-    
-    const lng = baseLng + (clickX - 400) / scaleFactor;
-    const lat = baseLat - (clickY - 250) / scaleFactor;
-    onMapClick(lat, lng);
-  };
+    return () => {
+      if (leafletMapRef.current) {
+        try {
+          leafletMapRef.current.remove();
+        } catch (_) {}
+        leafletMapRef.current = null;
+      }
+    };
+  }, []);
 
-  // Kolkata Landmark positions for map context
-  const victoriaCoords = projectCoords(22.5448, 88.3426);
-  const parkStMetroCoords = projectCoords(22.5552, 88.3510);
-  const rabindraSadanCoords = projectCoords(22.5416, 88.3475);
+  // Update Layers & Polylines when candidate routes, selected route, or heatmap changes
+  useEffect(() => {
+    const map = leafletMapRef.current;
+    const Leaflet = (window as any).L;
+    if (!map || !Leaflet || !layersGroupRef.current) return;
+
+    layersGroupRef.current.clearLayers();
+
+    const bounds: any[] = [];
+
+    // 1. Draw Candidate Route Polylines
+    candidates.forEach((candidate) => {
+      const isSelected = candidate.id === selectedRouteId;
+      const poly = candidate.geoJsonPolyline;
+      if (!poly || poly.length < 2) return;
+
+      const latLngs = poly.map(pt => [pt[0], pt[1]]);
+      latLngs.forEach(pt => bounds.push(pt));
+
+      let color = '#3b82f6'; // Blue for balanced
+      if (candidate.tag === 'safest') color = '#10b981'; // Emerald green
+      else if (candidate.tag === 'fastest') color = '#f59e0b'; // Amber
+
+      const line = Leaflet.polyline(latLngs, {
+        color,
+        weight: isSelected ? 7 : 4,
+        opacity: isSelected ? 1.0 : 0.55,
+        dashArray: candidate.tag === 'fastest' ? '8, 8' : undefined
+      });
+
+      line.on('click', () => {
+        if (onSelectRoute) onSelectRoute(candidate.id);
+      });
+
+      layersGroupRef.current.addLayer(line);
+
+      // Render start/end markers for selected route
+      if (isSelected && latLngs.length > 0) {
+        const startPt = latLngs[0];
+        const endPt = latLngs[latLngs.length - 1];
+
+        const startIcon = Leaflet.divIcon({
+          className: 'custom-pin-start',
+          html: `<div style="background-color:#2563eb;color:white;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:12px;border:3px solid white;box-shadow:0 4px 6px rgba(0,0,0,0.3);">A</div>`,
+          iconSize: [28, 28],
+          iconAnchor: [14, 14]
+        });
+
+        const endIcon = Leaflet.divIcon({
+          className: 'custom-pin-end',
+          html: `<div style="background-color:#dc2626;color:white;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:12px;border:3px solid white;box-shadow:0 4px 6px rgba(0,0,0,0.3);">B</div>`,
+          iconSize: [28, 28],
+          iconAnchor: [14, 14]
+        });
+
+        layersGroupRef.current.addLayer(Leaflet.marker(startPt, { icon: startIcon }));
+        layersGroupRef.current.addLayer(Leaflet.marker(endPt, { icon: endIcon }));
+      }
+
+      // Draw unlit segment markers
+      if (candidate.segments) {
+        candidate.segments.forEach(seg => {
+          if (seg.score < 50 && seg.start) {
+            const warningMarker = Leaflet.circleMarker([seg.start.lat, seg.start.lng], {
+              radius: 6,
+              fillColor: '#ef4444',
+              color: '#7f1d1d',
+              weight: 2,
+              fillOpacity: 0.9
+            });
+            warningMarker.bindTooltip('⚠️ Unlit Street Segment (Dim Lighting)', { permanent: false });
+            layersGroupRef.current.addLayer(warningMarker);
+          }
+        });
+      }
+    });
+
+    // 2. Draw Heatmap Hazard Points
+    if (showHeatmap && heatmapPoints.length > 0) {
+      heatmapPoints.forEach(pt => {
+        const catLabel = pt.category.replace('_', ' ').toUpperCase();
+        const circle = Leaflet.circle([pt.lat, pt.lng], {
+          radius: 120 + (pt.intensity || 0.8) * 100,
+          color: '#ef4444',
+          fillColor: '#dc2626',
+          fillOpacity: 0.35,
+          weight: 1.5
+        });
+        circle.bindPopup(`<div style="font-size:12px;font-weight:bold;color:#1e293b;">📍 ${catLabel}<br/><span style="font-size:10px;color:#64748b;">Reported ${pt.ageDays} day(s) ago</span></div>`);
+        layersGroupRef.current.addLayer(circle);
+      });
+    }
+
+    // 3. User Live GPS position marker
+    const targetPos = activeJourneyLocation || userLocation;
+    if (targetPos) {
+      const userIcon = Leaflet.divIcon({
+        className: 'custom-pin-user',
+        html: `<div style="background-color:${isDeviated ? '#ef4444' : '#2563eb'};width:22px;height:22px;border-radius:50%;border:3px solid white;box-shadow:0 0 12px ${isDeviated ? '#ef4444' : '#2563eb'};"></div>`,
+        iconSize: [22, 22],
+        iconAnchor: [11, 11]
+      });
+      layersGroupRef.current.addLayer(Leaflet.marker([targetPos.lat, targetPos.lng], { icon: userIcon }));
+    }
+
+    // Auto fit bounds
+    if (bounds.length > 0) {
+      map.fitBounds(bounds, { padding: [40, 40] });
+    }
+  }, [candidates, selectedRouteId, heatmapPoints, showHeatmap, userLocation, activeJourneyLocation, isDeviated, onSelectRoute]);
+
+  const selectedCandidate = candidates.find(c => c.id === selectedRouteId) || candidates[0];
 
   return (
-    <div className={`relative w-full h-[480px] rounded-3xl overflow-hidden shadow-2xl border ${
-      isElderlyMode ? 'border-amber-400 bg-slate-950' : 'border-slate-800 bg-slate-900'
+    <div className={`relative w-full h-[450px] rounded-3xl overflow-hidden shadow-2xl border ${
+      isElderlyMode ? 'border-amber-400' : 'border-slate-800'
     }`}>
-      {/* Top Map Control Bar with Search */}
-      <div className="absolute top-4 left-4 right-4 z-40 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2">
-        {/* City Badge Overlay */}
-        <div className="flex items-center space-x-2 bg-slate-800 border-2 border-slate-600 px-4 py-2 rounded-full text-xs text-white shrink-0 shadow-2xl z-40">
-          <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />
-          <span className="font-black text-slate-100 tracking-wide">Kolkata Safe Map</span>
+      {/* Real Interactive Leaflet OpenStreetMap Container */}
+      <div ref={mapContainerRef} className="w-full h-full z-0" />
+
+      {/* Map Control Legend Bar */}
+      <div className="absolute bottom-3 left-3 right-3 z-10 flex flex-wrap items-center justify-between bg-slate-900/90 backdrop-blur-md border border-slate-700 px-4 py-2 rounded-2xl text-xs text-white shadow-xl gap-2 pointer-events-none">
+        <div className="flex items-center space-x-3">
+          <span className="flex items-center space-x-1 font-bold text-emerald-400">
+            <span className="w-3 h-3 rounded-full bg-emerald-500 inline-block" />
+            <span>Safest Route</span>
+          </span>
+          <span className="flex items-center space-x-1 font-bold text-amber-400">
+            <span className="w-3 h-3 rounded-full bg-amber-500 inline-block" />
+            <span>Shortcut</span>
+          </span>
+          <span className="flex items-center space-x-1 font-bold text-rose-400">
+            <span className="w-3 h-3 rounded-full bg-rose-500 inline-block" />
+            <span>Unlit Spot</span>
+          </span>
         </div>
-
-        {/* Dynamic Place Search Bar */}
-        <div className="relative w-full sm:w-80 z-50">
-          <div className="flex items-center bg-white border-2 border-rose-300 px-4 py-2 shadow-2xl rounded-full">
-            <span className="text-rose-600 mr-2 text-sm shrink-0">🔍</span>
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => {
-                setSearchQuery(e.target.value);
-                setShowSuggestions(true);
-              }}
-              onFocus={() => setShowSuggestions(true)}
-              placeholder="Search place in Kolkata..."
-              className="bg-transparent text-slate-900 placeholder-slate-400 text-xs font-extrabold outline-none w-full border-none focus:outline-none focus:ring-0"
-            />
-            {searchQuery && (
-              <button
-                onClick={() => {
-                  setSearchQuery('');
-                  setSearchResultPin(null);
-                  setShowSuggestions(false);
-                }}
-                className="text-slate-400 hover:text-slate-700 text-xs font-black px-1"
-              >
-                ✕
-              </button>
-            )}
-          </div>
-
-          {/* Autocomplete Dropdown */}
-          {showSuggestions && suggestions.length > 0 && (
-            <div className="absolute left-0 right-0 top-12 bg-white border-2 border-rose-300 rounded-2xl shadow-2xl py-1 z-50 max-h-56 overflow-y-auto">
-              <div className="px-3 py-1.5 text-[10px] uppercase font-black text-rose-600 border-b border-rose-100 bg-rose-50">
-                Kolkata Places & Landmarks
-              </div>
-              {suggestions.map((item) => (
-                <button
-                  key={item.name}
-                  onClick={() => handleSelectPlace(item)}
-                  className="w-full text-left px-3 py-2.5 text-xs font-bold text-slate-800 bg-white hover:bg-rose-500 hover:text-white flex items-center justify-between transition-colors border-b border-slate-100 last:border-0"
-                >
-                  <span className="flex items-center space-x-1.5">
-                    <span>📍</span>
-                    <span>{item.name}</span>
-                  </span>
-                  <span className="text-[10px] text-slate-400 font-mono">Select</span>
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
-
-      <svg
-        className="w-full h-full cursor-crosshair select-none"
-        viewBox="0 0 800 500"
-        onClick={handleSvgClick}
-      >
-        <defs>
-          <radialGradient id="heatGlow" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor="#ef4444" stopOpacity="0.6" />
-            <stop offset="100%" stopColor="#ef4444" stopOpacity="0" />
-          </radialGradient>
-          <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
-            <path d="M 40 0 L 0 0 0 40" fill="none" stroke={isElderlyMode ? '#334155' : '#1e293b'} strokeWidth="1" />
-          </pattern>
-        </defs>
-
-        <rect width="800" height="500" fill={isElderlyMode ? '#020617' : '#0f172a'} />
-        <rect width="800" height="500" fill="url(#grid)" />
-
-        {/* Kolkata Major Roads (AJC Bose Rd & Park Street Arterial) */}
-        <path d="M 120 440 L 700 80" fill="none" stroke="#334155" strokeWidth="14" strokeLinecap="round" />
-        <path d="M 200 80 L 650 440" fill="none" stroke="#334155" strokeWidth="10" strokeLinecap="round" />
-
-        {/* Streetlight indicators */}
-        {[200, 300, 400, 500, 600].map((x, idx) => (
-          <circle key={`light_${idx}`} cx={x} cy={380 - idx * 55} r="3.5" fill="#fbbf24" opacity="0.85" />
-        ))}
-
-        {/* Kolkata Landmark Labels */}
-        <g transform={`translate(${parkStMetroCoords[0]}, ${parkStMetroCoords[1]})`}>
-          <rect x="-55" y="-22" width="110" height="20" rx="6" fill="#090d16" opacity="1" stroke="#475569" strokeWidth="1.5" />
-          <text x="0" y="-8" textAnchor="middle" fill="#93c5fd" fontSize="10" fontWeight="bold">🚇 Park Street Metro</text>
-        </g>
-
-        <g transform={`translate(${rabindraSadanCoords[0]}, ${rabindraSadanCoords[1]})`}>
-          <rect x="-55" y="6" width="110" height="20" rx="6" fill="#090d16" opacity="1" stroke="#475569" strokeWidth="1.5" />
-          <text x="0" y="20" textAnchor="middle" fill="#93c5fd" fontSize="10" fontWeight="bold">🎭 Rabindra Sadan</text>
-        </g>
-
-        <g transform={`translate(${victoriaCoords[0]}, ${victoriaCoords[1]})`}>
-          <rect x="-60" y="-22" width="120" height="20" rx="6" fill="#090d16" opacity="1" stroke="#475569" strokeWidth="1.5" />
-          <text x="0" y="-8" textAnchor="middle" fill="#fcd34d" fontSize="10" fontWeight="bold">🏛️ Victoria Memorial</text>
-        </g>
-
-        {/* Crowdsourced Heatmap Layer */}
-        {showHeatmap && heatmapPoints.map((pt, idx) => {
-          const [x, y] = projectCoords(pt.lat, pt.lng);
-          const radius = 35 + pt.intensity * 25;
-          return (
-            <g key={`heat_${idx}`}>
-              <circle cx={x} cy={y} r={radius} fill="url(#heatGlow)" />
-              <circle cx={x} cy={y} r="5" fill="#ef4444" stroke="#fef2f2" strokeWidth="1.5" />
-              <text x={x + 8} y={y - 8} fill="#f87171" fontSize="10" fontWeight="bold">
-                {pt.category.replace('_', ' ')}
-              </text>
-            </g>
-          );
-        })}
-
-        {/* Candidate Routes Rendering */}
-        {candidates.map((candidate) => {
-          if (!candidate.geoJsonPolyline || candidate.geoJsonPolyline.length === 0) return null;
-          const isSelected = candidate.id === selectedRouteId;
-          const points = candidate.geoJsonPolyline.map(pt => projectCoords(pt[0], pt[1]));
-          const pathD = points.reduce((acc, pt, idx) => `${acc} ${idx === 0 ? 'M' : 'L'} ${pt[0]} ${pt[1]}`, '');
-
-          let color = '#3b82f6';
-          if (candidate.tag === 'safest') color = '#10b981';
-          else if (candidate.tag === 'fastest') color = '#f59e0b';
-
-          return (
-            <g key={candidate.id} onClick={(e) => { e.stopPropagation(); onSelectRoute && onSelectRoute(candidate.id); }}>
-              {isSelected && (
-                <path
-                  d={pathD}
-                  fill="none"
-                  stroke={color}
-                  strokeWidth={isElderlyMode ? "14" : "10"}
-                  strokeOpacity="0.4"
-                  strokeLinecap="round"
-                />
-              )}
-
-              <path
-                d={pathD}
-                fill="none"
-                stroke={color}
-                strokeWidth={isSelected ? (isElderlyMode ? "7" : "5") : "3"}
-                strokeDasharray={candidate.tag === 'fastest' ? '6 4' : 'none'}
-                strokeLinecap="round"
-                className="cursor-pointer transition-all duration-300 hover:opacity-100 opacity-90"
-              />
-
-              {candidate.segments && candidate.segments.map((seg, sIdx) => {
-                if (seg && seg.score < 50 && seg.start) {
-                  const [sx, sy] = projectCoords(seg.start.lat, seg.start.lng);
-                  return (
-                    <circle key={`unlit_${candidate.id}_${sIdx}`} cx={sx} cy={sy} r="5" fill="#ef4444" stroke="#7f1d1d" strokeWidth="1.5" />
-                  );
-                }
-                return null;
-              })}
-            </g>
-          );
-        })}
-
-        {/* Origin & Destination Pin Markers */}
-        {candidates.length > 0 && candidateFirstLast(candidates[0], projectCoords)}
-
-        {/* Searched Location Pin Marker */}
-        {searchResultPin && (
-          <g transform={`translate(${projectCoords(searchResultPin.lat, searchResultPin.lng).join(',')})`}>
-            <circle r="18" fill="#a855f7" opacity="0.35" className="animate-pulse" />
-            <circle r="10" fill="#9333ea" stroke="#ffffff" strokeWidth="2" />
-            <text x="0" y="-14" textAnchor="middle" fill="#f3e8ff" fontSize="10" fontWeight="extrabold">
-              📍 {searchResultPin.name}
-            </text>
-          </g>
-        )}
-
-        {/* Live Tracking Position Marker */}
-        {activeJourneyLocation && (
-          <g transform={`translate(${projectCoords(activeJourneyLocation.lat, activeJourneyLocation.lng).join(',')})`}>
-            <circle r="22" fill={isDeviated ? "#ef4444" : "#10b981"} opacity="0.3" className="animate-ping" />
-            <circle r="12" fill={isDeviated ? "#dc2626" : "#059669"} stroke="#ffffff" strokeWidth="2.5" />
-            <circle r="4" fill="#ffffff" />
-          </g>
-        )}
-      </svg>
-
-      {/* Map Legend */}
-      <div className="absolute bottom-4 left-4 right-4 z-20 flex justify-between items-center bg-slate-950 border-2 border-slate-700 px-4 py-2.5 rounded-2xl text-xs shadow-2xl">
-        <div className="flex items-center space-x-4">
-          <div className="flex items-center space-x-1.5">
-            <span className="w-3.5 h-1 bg-emerald-500 rounded-full" />
-            <span className="text-slate-200 font-bold">Safest Route</span>
-          </div>
-          <div className="flex items-center space-x-1.5">
-            <span className="w-3.5 h-1 bg-amber-500 rounded-full" />
-            <span className="text-slate-200 font-bold">Fastest Shortcut</span>
-          </div>
-          <div className="flex items-center space-x-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-red-500" />
-            <span className="text-slate-200 font-bold">Unlit Spot</span>
-          </div>
-        </div>
-        <span className="text-slate-400 text-[11px]">Click map anywhere to add report</span>
+        <span className="text-[11px] text-slate-300 font-semibold">
+          {selectedCandidate ? `🗺️ ${selectedCandidate.name}` : '📍 OpenStreetMap Interactive Safety Engine • Tap map to report safety issue'}
+        </span>
       </div>
     </div>
   );
 };
-
-function candidateFirstLast(cand: RouteCandidate, project: (lat: number, lng: number) => [number, number]) {
-  if (!cand || !cand.geoJsonPolyline || cand.geoJsonPolyline.length === 0) return null;
-  const first = cand.geoJsonPolyline[0];
-  const last = cand.geoJsonPolyline[cand.geoJsonPolyline.length - 1];
-  if (!first || !last) return null;
-  const [ox, oy] = project(first[0], first[1]);
-  const [dx, dy] = project(last[0], last[1]);
-
-  return (
-    <>
-      <g transform={`translate(${ox},${oy})`}>
-        <circle r="11" fill="#3b82f6" stroke="#ffffff" strokeWidth="2.5" />
-        <text x="0" y="3.5" textAnchor="middle" fill="#ffffff" fontSize="10" fontWeight="bold">Start</text>
-      </g>
-      <g transform={`translate(${dx},${dy})`}>
-        <circle r="11" fill="#f43f5e" stroke="#ffffff" strokeWidth="2.5" />
-        <text x="0" y="3.5" textAnchor="middle" fill="#ffffff" fontSize="10" fontWeight="bold">End</text>
-      </g>
-    </>
-  );
-}

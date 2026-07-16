@@ -62,24 +62,17 @@ export const RoutePlannerView: React.FC<RoutePlannerViewProps> = ({
   disclaimerNotice,
   userLocation
 }) => {
-  const [originText, setOriginText] = useState('Connaught Place (Delhi)');
-  const [destText, setDestText] = useState('India Gate (New Delhi)');
-  const [originCoords, setOriginCoords] = useState<{ lat: number; lng: number } | undefined>();
+  const [originText, setOriginText] = useState('My Current Location');
+  const [destText, setDestText] = useState('Sealdah Station (Kolkata, WB)');
+  const [originCoords, setOriginCoords] = useState<{ lat: number; lng: number } | undefined>(userLocation);
   const [destCoords, setDestCoords] = useState<{ lat: number; lng: number } | undefined>();
   const [detourBudget, setDetourBudget] = useState(25);
-  const [hasInitializedLocation, setHasInitializedLocation] = useState(false);
 
   React.useEffect(() => {
-    if (userLocation && !hasInitializedLocation) {
-      // Check if userLocation is not the hardcoded placeholder coordinate
-      const isPlaceholder = userLocation.lat === 28.6315 && userLocation.lng === 77.2167;
-      if (!isPlaceholder) {
-        setOriginText('My Current Location');
-        setOriginCoords(userLocation);
-        setHasInitializedLocation(true);
-      }
+    if (userLocation && originText === 'My Current Location') {
+      setOriginCoords(userLocation);
     }
-  }, [userLocation, hasInitializedLocation]);
+  }, [userLocation, originText]);
 
   const selectedCandidate = candidates.find(c => c.id === selectedRouteId) || candidates[0];
 

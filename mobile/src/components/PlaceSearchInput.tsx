@@ -143,35 +143,47 @@ export const PlaceSearchInput: React.FC<PlaceSearchInputProps> = ({
     setQuery(value);
   }, [value]);
 
-  // Initialize Google Places Autocomplete
+  // Initialize Google Places Autocomplete (only if Google Maps key is valid and hasn't failed auth)
   useEffect(() => {
-    if (!inputRef.current || !window.google?.maps?.places?.Autocomplete) return;
+    if (
+      !inputRef.current ||
+      !window.google?.maps?.places?.Autocomplete ||
+      (window as any).googleMapsFailed
+    ) {
+      return;
+    }
 
-    const autocomplete = new window.google.maps.places.Autocomplete(inputRef.current, {
-      componentRestrictions: { country: 'in' },
-      fields: ['formatted_address', 'geometry', 'name'],
-      types: ['geocode', 'establishment'],
-    });
+    try {
+      const autocomplete = new window.google.maps.places.Autocomplete(inputRef.current, {
+        componentRestrictions: { country: 'in' },
+        fields: ['formatted_address', 'geometry', 'name'],
+        types: ['geocode', 'establishment'],
+      });
 
-    autocomplete.addListener('place_changed', () => {
-      const place = autocomplete.getPlace();
-      if (place?.geometry?.location) {
-        const lat = place.geometry.location.lat();
-        const lng = place.geometry.location.lng();
-        const displayName = place.name || place.formatted_address || '';
-        setQuery(displayName);
-        setSelectedCoords({ lat, lng });
-        onChange(displayName, { lat, lng });
-        setShowDropdown(false);
-        setSuggestions([]);
-      }
-    });
+      autocomplete.addListener('place_changed', () => {
+        const place = autocomplete.getPlace();
+        if (place?.geometry?.location) {
+          const lat = place.geometry.location.lat();
+          const lng = place.geometry.location.lng();
+          const displayName = place.name || place.formatted_address || '';
+          setQuery(displayName);
+          setSelectedCoords({ lat, lng });
+          onChange(displayName, { lat, lng });
+          setShowDropdown(false);
+          setSuggestions([]);
+        }
+      });
 
-    autocompleteRef.current = autocomplete;
+      autocompleteRef.current = autocomplete;
+    } catch (e) {
+      console.warn('[SAHELI] Autocomplete initialization bypassed:', e);
+    }
 
     return () => {
       if (autocompleteRef.current) {
-        window.google?.maps?.event?.clearInstanceListeners?.(autocompleteRef.current);
+        try {
+          window.google?.maps?.event?.clearInstanceListeners?.(autocompleteRef.current);
+        } catch (_) {}
       }
     };
   }, []);
@@ -260,17 +272,28 @@ export const PlaceSearchInput: React.FC<PlaceSearchInputProps> = ({
     try {
       let loc: { lat: number; lng: number };
 
-      if (userLocation && (userLocation.lat !== 28.6315)) {
-        // Use already-acquired GPS location
+      if (userLocation && (userLocation.lat !== 28.6315 || userLocation.lng !== 77.2167)) {
         loc = userLocation;
       } else {
-        // Request fresh GPS
-        loc = await new Promise((resolve, reject) => {
-          navigator.geolocation.getCurrentPosition(
-            pos => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
-            reject,
-            { enableHighAccuracy: true, timeout: 8000 }
-          );
+        loc = await new Promise<{ lat: number; lng: number }>((resolve, reject) => {
+          if ('geolocation' in navigator) {
+            navigator.geolocation.getCurrentPosition(
+              pos => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+              reject,
+              { enableHighAccuracy: false, timeout: 6000 }
+            );
+          } else {
+            reject(new Error('Geolocation unsupported'));
+          }
+        }).catch(async () => {
+          const res = await fetch('https://ipapi.co/json/');
+          if (res.ok) {
+            const data = await res.json();
+            if (data.latitude && data.longitude) {
+              return { lat: parseFloat(data.latitude), lng: parseFloat(data.longitude) };
+            }
+          }
+          throw new Error('IP Geolocation fallback failed');
         });
       }
 
@@ -279,8 +302,7 @@ export const PlaceSearchInput: React.FC<PlaceSearchInputProps> = ({
       setSelectedCoords(loc);
       onChange(name, loc);
     } catch (err) {
-      console.warn('[SAHELI] GPS not available:', err);
-      // Show placeholder message
+      console.warn('[SAHELI] Location fetch error:', err);
       setQuery('My Current Location');
       onChange('My Current Location', userLocation);
     } finally {
@@ -288,7 +310,7 @@ export const PlaceSearchInput: React.FC<PlaceSearchInputProps> = ({
     }
   };
 
-  const showFallbackDropdown = showDropdown && suggestions.length > 0 && !window.google?.maps?.places?.Autocomplete;
+  const showFallbackDropdown = showDropdown && suggestions.length > 0 && (!autocompleteRef.current || (window as any).googleMapsFailed);
 
   return (
     <div className="relative w-full">

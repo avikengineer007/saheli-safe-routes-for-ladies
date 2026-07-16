@@ -40,6 +40,7 @@ const MainAppContent: React.FC = () => {
     lat: 28.6315,
     lng: 77.2167
   });
+  const [gpsAcquired, setGpsAcquired] = useState(false);
 
   // Overlay state
   const [sosOpen, setSosOpen] = useState(false);
@@ -50,31 +51,79 @@ const MainAppContent: React.FC = () => {
     lng: 77.2167
   });
 
-  // Fetch real-time live browser GPS location
+  // Fetch real-time live browser/device GPS location immediately with IP geolocation fallback
   useEffect(() => {
+    let active = true;
+
+    const fetchIpFallbackLocation = async () => {
+      try {
+        const res = await fetch('https://ipapi.co/json/');
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.latitude && data.longitude && active && !gpsAcquired) {
+            const ipLoc = { lat: parseFloat(data.latitude), lng: parseFloat(data.longitude) };
+            const placeLabel = data.city ? `${data.city}, ${data.region || 'India'}` : 'My Current Location';
+            setUserLocation(ipLoc);
+            setReportPinLocation(ipLoc);
+            setGpsAcquired(true);
+            handleCalculateRoutes(placeLabel, 'Sealdah Station (Kolkata, WB)', 25, ipLoc);
+          }
+        }
+      } catch (_) {}
+    };
+
     if ('geolocation' in navigator) {
-      const watchId = navigator.geolocation.watchPosition(
+      navigator.geolocation.getCurrentPosition(
         (position) => {
+          if (!active) return;
           const newLoc = {
             lat: position.coords.latitude,
             lng: position.coords.longitude
           };
           setUserLocation(newLoc);
-          setReportPinLocation(prev => (prev.lat === 22.5530 || prev.lat === 22.5552 || prev.lat === 28.6315) ? newLoc : prev);
+          setReportPinLocation(newLoc);
+          setGpsAcquired(true);
+          handleCalculateRoutes('My Current Location', 'Sealdah Station (Kolkata, WB)', 25, newLoc);
         },
         (error) => {
-          console.warn('[SAHELI GPS] Browser location access fallback to default:', error.message);
+          console.warn('[SAHELI GPS] Direct getCurrentPosition error:', error.message);
+          fetchIpFallbackLocation();
         },
-        { enableHighAccuracy: true, timeout: 15000, maximumAge: 5000 }
+        { enableHighAccuracy: false, timeout: 8000, maximumAge: 10000 }
       );
-      return () => navigator.geolocation.clearWatch(watchId);
-    }
-  }, []);
 
-  // Initial heatmap and default route calculation on mount
+      const watchId = navigator.geolocation.watchPosition(
+        (position) => {
+          if (!active) return;
+          const newLoc = {
+            lat: position.coords.latitude,
+            lng: position.coords.longitude
+          };
+          setUserLocation(newLoc);
+          setGpsAcquired(true);
+          setReportPinLocation(newLoc);
+        },
+        (error) => {
+          console.warn('[SAHELI GPS] watchPosition error:', error.message);
+        },
+        { enableHighAccuracy: false, timeout: 10000, maximumAge: 5000 }
+      );
+
+      return () => {
+        active = false;
+        navigator.geolocation.clearWatch(watchId);
+      };
+    } else {
+      fetchIpFallbackLocation();
+    }
+  }, [gpsAcquired]);
+
+  // Initial heatmap load on mount
   useEffect(() => {
     loadHeatmapData();
-    handleCalculateRoutes('Connaught Place (Delhi)', 'India Gate (New Delhi)', 25);
+    if (!gpsAcquired) {
+      handleCalculateRoutes('My Current Location', 'Sealdah Station (Kolkata, WB)', 25, userLocation);
+    }
   }, []);
 
   const loadHeatmapData = async () => {

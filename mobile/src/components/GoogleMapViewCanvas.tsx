@@ -44,9 +44,18 @@ export const GoogleMapViewCanvas: React.FC<GoogleMapViewCanvasProps> = (props) =
   const [mapsLoaded, setMapsLoaded] = useState(false);
   const [routeStatus, setRouteStatus] = useState<string>('');
 
-  // Check if window.google.maps is available
+  // Check if window.google.maps is available and catch auth failure
   useEffect(() => {
+    (window as any).gm_authFailure = () => {
+      console.warn('[SAHELI] Google Maps API key invalid or unbilled. Falling back to built-in MapViewCanvas.');
+      setMapsLoaded(false);
+    };
+
     const checkGoogleMaps = () => {
+      if ((window as any).googleMapsFailed) {
+        setMapsLoaded(false);
+        return;
+      }
       if (window.google && window.google.maps && window.google.maps.DirectionsService) {
         setMapsLoaded(true);
       }
@@ -94,118 +103,100 @@ export const GoogleMapViewCanvas: React.FC<GoogleMapViewCanvasProps> = (props) =
   useEffect(() => {
     if (!googleMapInstance.current || !mapsLoaded) return;
 
-    // Clear previous direction renderers
-    directionsRenderersRef.current.forEach(r => r.setMap(null));
+    // Clear previous direction polylines
+    directionsRenderersRef.current.forEach(r => r && r.setMap && r.setMap(null));
     directionsRenderersRef.current = [];
 
     // Clear markers
-    markersRef.current.forEach(m => m.setMap(null));
+    markersRef.current.forEach(m => m && m.setMap && m.setMap(null));
     markersRef.current = [];
 
     if (candidates.length === 0) return;
 
-    const ds = new window.google.maps.DirectionsService();
     const bounds = new window.google.maps.LatLngBounds();
 
-    // For each candidate route, derive origin+dest from polyline endpoints and call DirectionsService
     const routeColors: Record<string, string> = {
       safest: '#10b981',   // Emerald green
       fastest: '#f59e0b',  // Amber
       balanced: '#3b82f6'  // Blue
     };
 
-    let completedCount = 0;
-    const total = candidates.length;
-
-    candidates.forEach((candidate, idx) => {
+    candidates.forEach((candidate) => {
       const isSelected = candidate.id === selectedRouteId;
       const poly = candidate.geoJsonPolyline;
 
-      if (poly.length < 2) {
-        completedCount++;
-        return;
+      if (!poly || poly.length < 2) return;
+
+      const path = poly.map((pt: [number, number]) => ({ lat: pt[0], lng: pt[1] }));
+      path.forEach(pt => bounds.extend(pt));
+
+      const color = routeColors[candidate.tag] || (isSelected ? '#10b981' : '#3b82f6');
+
+      const polyline = new window.google.maps.Polyline({
+        path,
+        geodesic: true,
+        strokeColor: color,
+        strokeOpacity: isSelected ? 1.0 : 0.4,
+        strokeWeight: isSelected ? 7 : 4,
+        zIndex: isSelected ? 10 : 2,
+        map: googleMapInstance.current
+      });
+
+      polyline.addListener('click', () => {
+        if (onSelectRoute) onSelectRoute(candidate.id);
+      });
+
+      directionsRenderersRef.current.push(polyline);
+
+      // Add Start (Origin) and End (Destination) Markers for the selected route
+      if (isSelected) {
+        const startPt = path[0];
+        const endPt = path[path.length - 1];
+
+        const startMarker = new window.google.maps.Marker({
+          position: startPt,
+          map: googleMapInstance.current,
+          title: 'Start Location',
+          label: { text: 'A', color: '#ffffff', fontWeight: 'bold' },
+          icon: {
+            path: window.google.maps.SymbolPath.CIRCLE,
+            scale: 14,
+            fillColor: '#2563eb',
+            fillOpacity: 1,
+            strokeColor: '#ffffff',
+            strokeWeight: 3
+          }
+        });
+
+        const endMarker = new window.google.maps.Marker({
+          position: endPt,
+          map: googleMapInstance.current,
+          title: 'Destination',
+          label: { text: 'B', color: '#ffffff', fontWeight: 'bold' },
+          icon: {
+            path: window.google.maps.SymbolPath.CIRCLE,
+            scale: 14,
+            fillColor: '#dc2626',
+            fillOpacity: 1,
+            strokeColor: '#ffffff',
+            strokeWeight: 3
+          }
+        });
+
+        markersRef.current.push(startMarker, endMarker);
       }
-
-      // Use first and last points of polyline as origin/destination
-      const originPt = poly[0];
-      const destPt = poly[poly.length - 1];
-
-      const originLatLng = new window.google.maps.LatLng(originPt[0], originPt[1]);
-      const destLatLng = new window.google.maps.LatLng(destPt[0], destPt[1]);
-
-      // Try DirectionsService with the actual lat/lng coords — this will snap to real roads
-      ds.route(
-        {
-          origin: originLatLng,
-          destination: destLatLng,
-          travelMode: window.google.maps.TravelMode.WALKING,
-        },
-        (result: any, status: any) => {
-          completedCount++;
-
-          if (status === 'OK' && result) {
-            const color = routeColors[candidate.tag] || '#3b82f6';
-
-            const renderer = new window.google.maps.DirectionsRenderer({
-              map: googleMapInstance.current,
-              directions: result,
-              routeIndex: 0,
-              suppressMarkers: !isSelected, // Only show A/B markers on selected route
-              polylineOptions: {
-                strokeColor: color,
-                strokeOpacity: isSelected ? 1.0 : 0.4,
-                strokeWeight: isSelected ? 7 : 4,
-                geodesic: true
-              }
-            });
-
-            renderer.addListener('click', () => {
-              if (onSelectRoute) onSelectRoute(candidate.id);
-            });
-
-            directionsRenderersRef.current.push(renderer);
-
-            // Extend bounds with this route's legs
-            if (result.routes && result.routes[0] && result.routes[0].bounds) {
-              bounds.union(result.routes[0].bounds);
-            }
-
-            if (isSelected) {
-              setRouteStatus(`✅ Google Maps walking route loaded`);
-            }
-          } else {
-            // Fallback: draw existing polyline from OSRM if Google Directions fails
-            if (poly.length >= 2) {
-              const path = poly.map((pt: [number, number]) => ({ lat: pt[0], lng: pt[1] }));
-              const color = routeColors[candidate.tag] || '#3b82f6';
-              const pl = new window.google.maps.Polyline({
-                path,
-                geodesic: true,
-                strokeColor: color,
-                strokeOpacity: isSelected ? 0.9 : 0.35,
-                strokeWeight: isSelected ? 6 : 3,
-                map: googleMapInstance.current
-              });
-              directionsRenderersRef.current.push(pl as any);
-              path.forEach((pt: { lat: number; lng: number }) => bounds.extend(pt));
-            }
-            if (isSelected) {
-              setRouteStatus(`🗺️ OpenStreetMap walking route loaded`);
-            }
-          }
-
-          // Fit map once all routes are done
-          if (completedCount === total && !bounds.isEmpty()) {
-            googleMapInstance.current.fitBounds(bounds, { top: 80, bottom: 80, left: 40, right: 40 });
-          }
-        }
-      );
     });
 
-    // Safety heatmap markers
-    markersRef.current.forEach(m => m.setMap(null));
-    markersRef.current = [];
+    const selectedRoute = candidates.find(c => c.id === selectedRouteId) || candidates[0];
+    if (selectedRoute) {
+      setRouteStatus(`✅ Active street route: ${selectedRoute.name} (${selectedRoute.durationMinutes} min walk)`);
+    }
 
+    if (!bounds.isEmpty()) {
+      googleMapInstance.current.fitBounds(bounds, { top: 70, bottom: 70, left: 40, right: 40 });
+    }
+
+    // Safety heatmap markers
     if (showHeatmap && heatmapPoints.length > 0) {
       heatmapPoints.forEach((pt) => {
         const marker = new window.google.maps.Marker({
