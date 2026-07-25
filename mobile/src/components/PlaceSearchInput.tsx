@@ -27,26 +27,41 @@ declare global {
 }
 
 const POPULAR_INDIA_PLACES: PlaceSuggestion[] = [
+  // Major Indian Airports (AAI Open Infrastructure Data)
+  { id: 'ccu_airport', label: 'Netaji Subhash Chandra Bose Intl Airport (CCU)', sublabel: '✈️ AIRPORT • Kolkata, West Bengal', lat: 22.6520, lng: 88.4463 },
+  { id: 'del_airport', label: 'Indira Gandhi Intl Airport (DEL)', sublabel: '✈️ AIRPORT • New Delhi, Delhi', lat: 28.5562, lng: 77.1000 },
+  { id: 'bom_airport', label: 'Chhatrapati Shivaji Maharaj Intl Airport (BOM)', sublabel: '✈️ AIRPORT • Mumbai, Maharashtra', lat: 19.0896, lng: 72.8656 },
+  { id: 'blr_airport', label: 'Kempegowda Intl Airport (BLR)', sublabel: '✈️ AIRPORT • Bengaluru, Karnataka', lat: 13.1986, lng: 77.7066 },
+  { id: 'hyd_airport', label: 'Rajiv Gandhi Intl Airport (HYD)', sublabel: '✈️ AIRPORT • Hyderabad, Telangana', lat: 17.2403, lng: 78.4294 },
+  { id: 'maa_airport', label: 'Chennai Intl Airport (MAA)', sublabel: '✈️ AIRPORT • Chennai, Tamil Nadu', lat: 12.9941, lng: 80.1709 },
+  { id: 'gau_airport', label: 'Lokpriya Gopinath Bordoloi Intl Airport (GAU)', sublabel: '✈️ AIRPORT • Guwahati, Assam', lat: 26.1061, lng: 91.5859 },
+  { id: 'pat_airport', label: 'Jayprakash Narayan Airport (PAT)', sublabel: '✈️ AIRPORT • Patna, Bihar', lat: 25.5913, lng: 85.0880 },
+
+  // Major Indian Railway Stations (Indian Railways Open Infrastructure Data)
+  { id: 'barrackpore_stn', label: 'Barrackpore Railway Station (BP)', sublabel: '🚆 RAILWAY STATION • Barrackpore, West Bengal', lat: 22.7630, lng: 88.3640 },
+  { id: 'sealdah_stn', label: 'Sealdah Railway Station (SDAH)', sublabel: '🚆 RAILWAY STATION • Kolkata, West Bengal', lat: 22.5670, lng: 88.3712 },
+  { id: 'howrah_stn', label: 'Howrah Junction Station (HWH)', sublabel: '🚆 RAILWAY STATION • Howrah, West Bengal', lat: 22.5839, lng: 88.3430 },
+  { id: 'ndls_stn', label: 'New Delhi Railway Station (NDLS)', sublabel: '🚆 RAILWAY STATION • New Delhi, Delhi', lat: 28.6430, lng: 77.2194 },
+  { id: 'csmt_stn', label: 'Chhatrapati Shivaji Maharaj Terminus (CSMT)', sublabel: '🚆 RAILWAY STATION • Mumbai, Maharashtra', lat: 18.9400, lng: 72.8353 },
+  { id: 'sbc_stn', label: 'KSR Bengaluru City Junction (SBC)', sublabel: '🚆 RAILWAY STATION • Bengaluru, Karnataka', lat: 12.9781, lng: 77.5697 },
+  { id: 'mas_stn', label: 'Chennai Central Railway Station (MAS)', sublabel: '🚆 RAILWAY STATION • Chennai, Tamil Nadu', lat: 13.0827, lng: 80.2757 },
+  { id: 'sc_stn', label: 'Secunderabad Junction Station (SC)', sublabel: '🚆 RAILWAY STATION • Secunderabad, Telangana', lat: 17.4339, lng: 78.5015 },
+  { id: 'ghy_stn', label: 'Guwahati Railway Station (GHY)', sublabel: '🚆 RAILWAY STATION • Guwahati, Assam', lat: 26.1810, lng: 91.7530 },
+  { id: 'pnbe_stn', label: 'Patna Junction Station (PNBE)', sublabel: '🚆 RAILWAY STATION • Patna, Bihar', lat: 25.6020, lng: 85.1376 },
+
+  // Barrackpore & Local Places
+  { id: 'dada_boudi_hotel', label: 'Dada Boudi Hotel', sublabel: '🍽️ RESTAURANT • Barrackpore, West Bengal', lat: 22.7628, lng: 88.3642 },
+  { id: 'dada_boudi_restaurant', label: 'Dada Boudi Restaurant', sublabel: '🍽️ RESTAURANT • Barrackpore, West Bengal', lat: 22.7625, lng: 88.3638 },
+  { id: 'reliance_smart_point', label: 'Reliance Smart Point', sublabel: 'Barrackpore, West Bengal', lat: 22.7602, lng: 88.3615 },
+  { id: 'audreys_korean_cafe', label: 'Audrey\'s Korean Cafe', sublabel: '🍽️ CAFE • Barrackpore, West Bengal', lat: 22.7588, lng: 88.3651 },
+  { id: 'mangal_pandey_park', label: 'Mangal Pandey Park', sublabel: 'Barrackpore, West Bengal', lat: 22.7570, lng: 88.3530 },
+
+  // Metro Cities & Iconic Places
+  { id: 'flurys_kol', label: 'Flurys', sublabel: '🍽️ CAFE • Park Street, Kolkata', lat: 22.5542, lng: 88.3520 },
+  { id: 'peter_cat_kol', label: 'Peter Cat Restaurant', sublabel: '🍽️ RESTAURANT • Park Street, Kolkata', lat: 22.5545, lng: 88.3525 },
   { id: 'cp_delhi', label: 'Connaught Place', sublabel: 'New Delhi, Delhi', lat: 28.6315, lng: 77.2167 },
-  { id: 'india_gate', label: 'India Gate', sublabel: 'New Delhi, Delhi', lat: 28.6129, lng: 77.2295 },
   { id: 'marine_mumbai', label: 'Marine Drive', sublabel: 'Mumbai, Maharashtra', lat: 18.9438, lng: 72.8232 },
-  { id: 'gateway_mumbai', label: 'Gateway of India', sublabel: 'Mumbai, Maharashtra', lat: 18.9220, lng: 72.8347 },
-  { id: 'mg_road_blr', label: 'MG Road Metro', sublabel: 'Bengaluru, Karnataka', lat: 12.9756, lng: 77.6066 },
-  { id: 'koramangala_blr', label: 'Koramangala 5th Block', sublabel: 'Bengaluru, Karnataka', lat: 12.9352, lng: 77.6245 },
-  { id: 'park_street_kol', label: 'Park Street Metro', sublabel: 'Kolkata, West Bengal', lat: 22.5552, lng: 88.3510 },
-  { id: 'howrah_kol', label: 'Howrah Railway Station', sublabel: 'Howrah, West Bengal', lat: 22.5833, lng: 88.3419 },
-  { id: 'salt_lake_kol', label: 'Salt Lake Sector V', sublabel: 'Kolkata, West Bengal', lat: 22.5769, lng: 88.4304 },
-  { id: 'tnagar_chennai', label: 'T. Nagar', sublabel: 'Chennai, Tamil Nadu', lat: 13.0418, lng: 80.2341 },
-  { id: 'hitec_hyd', label: 'HITEC City', sublabel: 'Hyderabad, Telangana', lat: 17.4435, lng: 78.3772 },
-  { id: 'charminar_hyd', label: 'Charminar', sublabel: 'Hyderabad, Telangana', lat: 17.3616, lng: 78.4747 },
-  { id: 'hawa_mahal_jaipur', label: 'Hawa Mahal', sublabel: 'Jaipur, Rajasthan', lat: 26.9239, lng: 75.8267 },
-  { id: 'hazratganj_lko', label: 'Hazratganj', sublabel: 'Lucknow, Uttar Pradesh', lat: 26.8467, lng: 80.9462 },
-  { id: 'police_bazaar_shg', label: 'Police Bazaar', sublabel: 'Shillong, Meghalaya', lat: 25.5760, lng: 91.8847 },
-  { id: 'gsroad_ghy', label: 'GS Road ABC Crossing', sublabel: 'Guwahati, Assam', lat: 26.1554, lng: 91.7783 },
-  { id: 'sabarmati_ahm', label: 'Sabarmati Riverfront', sublabel: 'Ahmedabad, Gujarat', lat: 23.0225, lng: 72.5714 },
-  { id: 'sec17_chd', label: 'Sector 17 Plaza', sublabel: 'Chandigarh, UT', lat: 30.7358, lng: 76.7873 },
-  { id: 'lal_chowk_srg', label: 'Lal Chowk', sublabel: 'Srinagar, J&K', lat: 34.0850, lng: 74.8059 },
-  { id: 'marine_kochi', label: 'Marine Drive Kochi', sublabel: 'Kochi, Kerala', lat: 9.9641, lng: 76.2820 },
+  { id: 'mg_road_blr', label: 'MG Road Metro', sublabel: '🚇 METRO STATION • Bengaluru, Karnataka', lat: 12.9756, lng: 77.6066 }
 ];
 
 async function reverseGeocode(lat: number, lng: number): Promise<string> {
@@ -94,19 +109,35 @@ async function searchNominatim(query: string): Promise<PlaceSuggestion[]> {
   try {
     const q = query.toLowerCase().includes('india') ? query : `${query}, India`;
     const res = await fetch(
-      `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&countrycodes=in&limit=6&addressdetails=1`,
+      `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&countrycodes=in&limit=8&addressdetails=1&extratags=1`,
       { headers: { 'Accept-Language': 'en' } }
     );
     if (res.ok) {
       const data = await res.json();
       return data.map((item: any, i: number) => {
         const addr = item.address || {};
-        const main = addr.road || addr.neighbourhood || addr.suburb || addr.amenity || item.display_name.split(',')[0];
-        const sub = [addr.city || addr.town || addr.village, addr.state].filter(Boolean).join(', ');
+        const type = item.type || item.extratags?.amenity || item.extratags?.railway || item.extratags?.aeroway || '';
+        const itemClass = item.class || '';
+
+        let badge = '';
+        if (itemClass === 'railway' || type === 'station' || type === 'subway') badge = '🚆 RAILWAY STATION';
+        else if (itemClass === 'aeroway' || type === 'aerodrome' || type === 'terminal') badge = '✈️ AIRPORT';
+        else if (type === 'bus_station') badge = '🚌 BUS TERMINAL';
+        else if (type === 'police') badge = '👮 POLICE STATION';
+        else if (type === 'hospital') badge = '🏥 HOSPITAL';
+        else if (itemClass === 'amenity' && ['restaurant', 'cafe', 'fast_food', 'food_court', 'pub', 'bar'].includes(type)) badge = `🍽️ ${type.replace('_', ' ').toUpperCase()}`;
+
+        const mainName = item.name || item.extratags?.name || item.display_name.split(',')[0];
+        const subDetails = [
+          badge || undefined,
+          addr.suburb || addr.neighbourhood || addr.city || addr.town || addr.village,
+          addr.state
+        ].filter(Boolean).join(' • ');
+
         return {
-          id: `nominatim_${i}`,
-          label: main,
-          sublabel: sub || undefined,
+          id: `poi_${i}_${item.place_id || i}`,
+          label: mainName,
+          sublabel: subDetails || undefined,
           lat: parseFloat(item.lat),
           lng: parseFloat(item.lon),
         };

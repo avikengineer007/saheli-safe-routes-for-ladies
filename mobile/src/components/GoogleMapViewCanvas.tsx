@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { RouteCandidate, HeatmapPoint } from '../types';
+import { RouteCandidate, HeatmapPoint, getCategoryRadiusMeters } from '../types';
 import { MapViewCanvas } from './MapViewCanvas';
 
 declare const google: any;
@@ -48,6 +48,7 @@ export const GoogleMapViewCanvas: React.FC<GoogleMapViewCanvasProps> = (props) =
   useEffect(() => {
     (window as any).gm_authFailure = () => {
       console.warn('[SAHELI] Google Maps API key invalid or unbilled. Falling back to built-in MapViewCanvas.');
+      (window as any).googleMapsFailed = true;
       setMapsLoaded(false);
     };
 
@@ -56,7 +57,12 @@ export const GoogleMapViewCanvas: React.FC<GoogleMapViewCanvasProps> = (props) =
         setMapsLoaded(false);
         return;
       }
-      if (window.google && window.google.maps && window.google.maps.DirectionsService) {
+      if (
+        window.google &&
+        window.google.maps &&
+        window.google.maps.DirectionsService &&
+        window.google.maps.Map
+      ) {
         setMapsLoaded(true);
       }
     };
@@ -121,24 +127,28 @@ export const GoogleMapViewCanvas: React.FC<GoogleMapViewCanvasProps> = (props) =
       balanced: '#3b82f6'  // Blue
     };
 
-    candidates.forEach((candidate) => {
-      const isSelected = candidate.id === selectedRouteId;
-      const poly = candidate.geoJsonPolyline;
+    const targetSelectedId = selectedRouteId || (candidates.find(c => c.isRecommended) || candidates[0])?.id;
 
+    candidates.forEach((candidate) => {
+      const isSelected = candidate.id === targetSelectedId;
+      // Show ONLY the exact selected route to destination, avoid drawing surrounding alternate routes on map
+      if (!isSelected) return;
+
+      const poly = candidate.geoJsonPolyline;
       if (!poly || poly.length < 2) return;
 
       const path = poly.map((pt: [number, number]) => ({ lat: pt[0], lng: pt[1] }));
       path.forEach(pt => bounds.extend(pt));
 
-      const color = routeColors[candidate.tag] || (isSelected ? '#10b981' : '#3b82f6');
+      const color = routeColors[candidate.tag] || '#10b981';
 
       const polyline = new window.google.maps.Polyline({
         path,
         geodesic: true,
         strokeColor: color,
-        strokeOpacity: isSelected ? 1.0 : 0.4,
-        strokeWeight: isSelected ? 7 : 4,
-        zIndex: isSelected ? 10 : 2,
+        strokeOpacity: 1.0,
+        strokeWeight: 7,
+        zIndex: 10,
         map: googleMapInstance.current
       });
 
@@ -196,25 +206,52 @@ export const GoogleMapViewCanvas: React.FC<GoogleMapViewCanvasProps> = (props) =
       googleMapInstance.current.fitBounds(bounds, { top: 70, bottom: 70, left: 40, right: 40 });
     }
 
-    // Safety heatmap markers
+    // Safety heatmap markers (Specific category radius: 10m for poor lighting, 100m for unsafe area, 150m for harassment)
     if (showHeatmap && heatmapPoints.length > 0) {
       heatmapPoints.forEach((pt) => {
+        const radiusMeters = pt.radiusMeters || getCategoryRadiusMeters(pt.category);
+        const catLabel = pt.category.replace('_', ' ').toUpperCase();
+
+        let strokeColor = '#ef4444';
+        let fillColor = '#dc2626';
+        if (pt.category === 'poor_lighting') {
+          strokeColor = '#eab308';
+          fillColor = '#ca8a04';
+        } else if (pt.category === 'unsafe_area') {
+          strokeColor = '#f97316';
+          fillColor = '#ea580c';
+        }
+
+        // Draw affected range circle on Google Map
+        const hazardCircle = new window.google.maps.Circle({
+          strokeColor: strokeColor,
+          strokeOpacity: 0.8,
+          strokeWeight: 1.5,
+          fillColor: fillColor,
+          fillOpacity: 0.3,
+          map: googleMapInstance.current,
+          center: { lat: pt.lat, lng: pt.lng },
+          radius: radiusMeters
+        });
+        markersRef.current.push(hazardCircle);
+
+        // Center spot marker
         const marker = new window.google.maps.Marker({
           position: { lat: pt.lat, lng: pt.lng },
           map: googleMapInstance.current,
-          title: pt.category.replace('_', ' '),
+          title: `${catLabel} (${radiusMeters}m affected zone)`,
           icon: {
             path: window.google.maps.SymbolPath.CIRCLE,
-            scale: 6,
-            fillColor: '#dc2626',
-            fillOpacity: 0.9,
-            strokeColor: '#fee2e2',
+            scale: 5,
+            fillColor: fillColor,
+            fillOpacity: 1,
+            strokeColor: '#ffffff',
             strokeWeight: 2
           }
         });
 
         const infoWindow = new window.google.maps.InfoWindow({
-          content: `<div style="color:#000;font-size:12px;font-weight:bold;">📍 ${pt.category.replace('_', ' ')}<br/><span style="font-size:10px;color:#666;">Reported ${pt.ageDays} days ago</span></div>`
+          content: `<div style="color:#000;font-size:12px;font-weight:bold;">📍 ${catLabel}<br/><span style="font-size:11px;color:#dc2626;font-weight:600;">Affected Area Range: ${radiusMeters}m</span><br/><span style="font-size:10px;color:#666;">Reported ${pt.ageDays} days ago</span></div>`
         });
 
         marker.addListener('click', () => {

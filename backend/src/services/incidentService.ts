@@ -194,12 +194,18 @@ export class IncidentService {
 
         const intensity = Math.round(severityWeight * timeDecayFactor * 100) / 100;
 
+        let radiusMeters = 50;
+        if (r.category === 'poor_lighting') radiusMeters = 10;
+        else if (r.category === 'unsafe_area') radiusMeters = 100;
+        else if (r.category === 'harassment') radiusMeters = 150;
+
         return {
           lat: r.lat,
           lng: r.lng,
           intensity,
           category: r.category,
-          ageDays: Math.round(ageDays * 10) / 10
+          ageDays: Math.round(ageDays * 10) / 10,
+          radiusMeters
         };
       });
   }

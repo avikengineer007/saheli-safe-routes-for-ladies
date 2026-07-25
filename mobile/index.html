@@ -12,7 +12,21 @@
     <title>SAHELI — Pan-India Safe Routes & Emergency Guard</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="https://maps.googleapis.com/maps/api/js?key=%VITE_GOOGLE_MAPS_API_KEY%&libraries=places,geometry,directions"></script>
+    <script>
+      (function() {
+        var apiKey = '%VITE_GOOGLE_MAPS_API_KEY%';
+        if (apiKey && apiKey.indexOf('%VITE_') !== 0 && apiKey.length > 5) {
+          var s = document.createElement('script');
+          s.src = 'https://maps.googleapis.com/maps/api/js?key=' + encodeURIComponent(apiKey) + '&libraries=places,geometry';
+          s.async = true;
+          s.defer = true;
+          s.onerror = function() { window.googleMapsFailed = true; };
+          document.head.appendChild(s);
+        } else {
+          window.googleMapsFailed = true;
+        }
+      })();
+    </script>
     <script src="https://cdn.tailwindcss.com"></script>
   </head>
   <body class="bg-slate-950 text-slate-100">

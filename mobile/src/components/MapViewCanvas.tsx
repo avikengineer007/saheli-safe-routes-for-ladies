@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { RouteCandidate, HeatmapPoint } from '../types';
+import { RouteCandidate, HeatmapPoint, getCategoryRadiusMeters } from '../types';
 
 interface MapViewCanvasProps {
   candidates: RouteCandidate[];
@@ -84,24 +84,28 @@ export const MapViewCanvas: React.FC<MapViewCanvasProps> = ({
 
     const bounds: any[] = [];
 
-    // 1. Draw Candidate Route Polylines
+    // 1. Draw Active Pinpointed Route Polyline (Suppress surrounding alternate route lines)
+    const targetSelectedId = selectedRouteId || (candidates.find(c => c.isRecommended) || candidates[0])?.id;
+
     candidates.forEach((candidate) => {
-      const isSelected = candidate.id === selectedRouteId;
+      const isSelected = candidate.id === targetSelectedId;
+      // Show ONLY the exact selected route to destination, avoid drawing surrounding alternate routes on map
+      if (!isSelected) return;
+
       const poly = candidate.geoJsonPolyline;
       if (!poly || poly.length < 2) return;
 
       const latLngs = poly.map(pt => [pt[0], pt[1]]);
       latLngs.forEach(pt => bounds.push(pt));
 
-      let color = '#3b82f6'; // Blue for balanced
-      if (candidate.tag === 'safest') color = '#10b981'; // Emerald green
-      else if (candidate.tag === 'fastest') color = '#f59e0b'; // Amber
+      let color = '#10b981'; // Emerald green
+      if (candidate.tag === 'fastest') color = '#f59e0b';
+      else if (candidate.tag === 'balanced') color = '#3b82f6';
 
       const line = Leaflet.polyline(latLngs, {
         color,
-        weight: isSelected ? 7 : 4,
-        opacity: isSelected ? 1.0 : 0.55,
-        dashArray: candidate.tag === 'fastest' ? '8, 8' : undefined
+        weight: 7,
+        opacity: 1.0
       });
 
       line.on('click', () => {
@@ -151,19 +155,43 @@ export const MapViewCanvas: React.FC<MapViewCanvasProps> = ({
       }
     });
 
-    // 2. Draw Heatmap Hazard Points
+    // 2. Draw Heatmap Hazard Points (Specific category radius: 10m for poor lighting, 100m for unsafe area, 150m for harassment)
     if (showHeatmap && heatmapPoints.length > 0) {
       heatmapPoints.forEach(pt => {
+        const radiusMeters = pt.radiusMeters || getCategoryRadiusMeters(pt.category);
         const catLabel = pt.category.replace('_', ' ').toUpperCase();
+        
+        let strokeColor = '#ef4444';
+        let fillColor = '#dc2626';
+        if (pt.category === 'poor_lighting') {
+          strokeColor = '#eab308';
+          fillColor = '#ca8a04';
+        } else if (pt.category === 'unsafe_area') {
+          strokeColor = '#f97316';
+          fillColor = '#ea580c';
+        }
+
+        // Draw affected zone circle
         const circle = Leaflet.circle([pt.lat, pt.lng], {
-          radius: 120 + (pt.intensity || 0.8) * 100,
-          color: '#ef4444',
-          fillColor: '#dc2626',
-          fillOpacity: 0.35,
+          radius: radiusMeters,
+          color: strokeColor,
+          fillColor: fillColor,
+          fillOpacity: 0.3,
           weight: 1.5
         });
-        circle.bindPopup(`<div style="font-size:12px;font-weight:bold;color:#1e293b;">📍 ${catLabel}<br/><span style="font-size:10px;color:#64748b;">Reported ${pt.ageDays} day(s) ago</span></div>`);
+        circle.bindPopup(`<div style="font-size:12px;font-weight:bold;color:#1e293b;">📍 ${catLabel}<br/><span style="font-size:11px;color:#dc2626;font-weight:600;">Affected Area Range: ${radiusMeters} meters</span><br/><span style="font-size:10px;color:#64748b;">Reported ${pt.ageDays} day(s) ago</span></div>`);
         layersGroupRef.current.addLayer(circle);
+
+        // Center hazard spot pin marker
+        const hazardPin = Leaflet.circleMarker([pt.lat, pt.lng], {
+          radius: 5,
+          color: '#ffffff',
+          fillColor: fillColor,
+          fillOpacity: 1,
+          weight: 1.5
+        });
+        hazardPin.bindPopup(`<div style="font-size:12px;font-weight:bold;color:#1e293b;">📍 ${catLabel} (${radiusMeters}m zone)</div>`);
+        layersGroupRef.current.addLayer(hazardPin);
       });
     }
 

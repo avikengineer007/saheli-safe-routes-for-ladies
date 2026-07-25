@@ -63,7 +63,7 @@ export const RoutePlannerView: React.FC<RoutePlannerViewProps> = ({
   userLocation
 }) => {
   const [originText, setOriginText] = useState('My Current Location');
-  const [destText, setDestText] = useState('Sealdah Station (Kolkata, WB)');
+  const [destText, setDestText] = useState('Barrackpore Railway Station');
   const [originCoords, setOriginCoords] = useState<{ lat: number; lng: number } | undefined>(userLocation);
   const [destCoords, setDestCoords] = useState<{ lat: number; lng: number } | undefined>();
   const [detourBudget, setDetourBudget] = useState(25);

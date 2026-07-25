@@ -55,7 +55,7 @@ Respond ONLY in JSON format: {"category": string, "severityAuto": string, "confi
         reasoning: parsed.reasoning || 'LLM classification complete'
       };
     } catch (err: any) {
-      console.warn('[SAHELI AI Classifier Error]:', err.message || err);
+      console.log('[SAHELI Triage] External LLM unavailable or unbilled. Using deterministic rule-based triage fallback.');
       return this.fallbackLocalTriage(cleanText);
     }
   }

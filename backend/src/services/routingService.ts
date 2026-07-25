@@ -27,45 +27,51 @@ export class RoutingService {
    * Pan-India Landmark Locations Lookup (28 States & 8 Union Territories)
    */
   public static INDIAN_LANDMARKS: Record<string, SegmentPoint> = {
-    // Delhi NCR & National Capital Territory
-    'Connaught Place (Delhi)': { lat: 28.6315, lng: 77.2167 },
-    'India Gate (New Delhi)': { lat: 28.6129, lng: 77.2295 },
-    'Hauz Khas Village (Delhi)': { lat: 28.5494, lng: 77.1960 },
-    'Cyber City (Gurugram, HR)': { lat: 28.4950, lng: 77.0895 },
-    'Noida Sector 18 (UP)': { lat: 28.5708, lng: 77.3261 },
-    'Chandni Chowk (Old Delhi)': { lat: 28.6506, lng: 77.2303 },
+    // Barrackpore & Local Bengal Restaurants, Stores & Places
+    'Dada Boudi Hotel (Barrackpore)': { lat: 22.7628, lng: 88.3642 },
+    'Dada Boudi Restaurant (Barrackpore)': { lat: 22.7625, lng: 88.3638 },
+    'Reliance Smart Point (Barrackpore)': { lat: 22.7602, lng: 88.3615 },
+    'Audreys Korean Cafe (Barrackpore)': { lat: 22.7588, lng: 88.3651 },
+    'Barrackpore Railway Station': { lat: 22.7630, lng: 88.3640 },
+    'Barrackpore Station': { lat: 22.7630, lng: 88.3640 },
+    'Barrackpore Railway Station (BP)': { lat: 22.7630, lng: 88.3640 },
+    'Barrackpore Cantonment': { lat: 22.7610, lng: 88.3580 },
+    'Mangal Pandey Park (Barrackpore)': { lat: 22.7570, lng: 88.3530 },
+    'Ishapore Railway Station': { lat: 22.7820, lng: 88.3700 },
 
-    // Maharashtra & Western India
-    'Marine Drive (Mumbai, MH)': { lat: 18.9438, lng: 72.8232 },
-    'Gateway of India (Mumbai)': { lat: 18.9220, lng: 72.8347 },
-    'Bandra Kurla Complex (BKC, Mumbai)': { lat: 19.0657, lng: 72.8686 },
-    'FC Road (Pune, MH)': { lat: 18.5204, lng: 73.8416 },
-    'Sabarmati Riverfront (Ahmedabad, GJ)': { lat: 23.0300, lng: 72.5800 },
-    'Pink City Hawa Mahal (Jaipur, RJ)': { lat: 26.9239, lng: 75.8267 },
-
-    // Karnataka, Tamil Nadu, Telangana & Southern India
-    'MG Road Metro (Bengaluru, KA)': { lat: 12.9756, lng: 77.6066 },
-    'Koramangala 5th Block (Bengaluru)': { lat: 12.9352, lng: 77.6245 },
-    'T. Nagar Bus Terminus (Chennai, TN)': { lat: 13.0418, lng: 80.2341 },
-    'Marina Beach (Chennai, TN)': { lat: 13.0500, lng: 80.2824 },
-    'HITEC City (Hyderabad, TS)': { lat: 17.4435, lng: 78.3772 },
-    'Charminar (Hyderabad, TS)': { lat: 17.3616, lng: 78.4747 },
-    'Marine Drive Kochi (Kerala)': { lat: 9.9784, lng: 76.2753 },
-
-    // West Bengal & Eastern India
+    // Iconic Kolkata & Bengal Restaurants, Malls & Hubs
+    'Flurys Park Street (Kolkata)': { lat: 22.5542, lng: 88.3520 },
+    'Peter Cat (Park Street)': { lat: 22.5545, lng: 88.3525 },
+    'Mocambo (Park Street)': { lat: 22.5543, lng: 88.3523 },
+    'Arsalan Biryani (Park Circus)': { lat: 22.5440, lng: 88.3685 },
+    '6 Ballygunge Place': { lat: 22.5270, lng: 88.3650 },
+    'Quest Mall (Kolkata)': { lat: 22.5390, lng: 88.3658 },
     'Park Street Metro (Kolkata, WB)': { lat: 22.5552, lng: 88.3510 },
     'Rabindra Sadan (Kolkata, WB)': { lat: 22.5416, lng: 88.3475 },
     'Salt Lake Sector V (Kolkata, WB)': { lat: 22.5731, lng: 88.4337 },
     'Howrah Railway Station (WB)': { lat: 22.5839, lng: 88.3430 },
-    'Patna Sahib Railway Hub (Bihar)': { lat: 25.6110, lng: 85.2285 },
-    'KIIT Chowk Bhubaneswar (Odisha)': { lat: 20.3533, lng: 85.8189 },
+    'Sealdah Station (Kolkata, WB)': { lat: 22.5670, lng: 88.3712 },
 
-    // Northeast & Northern Union Territories
-    'Police Bazaar (Shillong, ML)': { lat: 25.5760, lng: 91.8847 },
-    'GS Road ABC Crossing (Guwahati, AS)': { lat: 26.1554, lng: 91.7783 },
-    'Lal Chowk (Srinagar, J&K)': { lat: 34.0713, lng: 74.8078 },
-    'Sector 17 Plaza (Chandigarh, UT)': { lat: 30.7398, lng: 76.7827 },
-    'Hazratganj GPO (Lucknow, UP)': { lat: 26.8467, lng: 80.9462 }
+    // Delhi NCR & National Capital Territory
+    'Karim Restaurant (Jama Masjid, Delhi)': { lat: 28.6508, lng: 77.2335 },
+    'Bukhara (ITC Maurya, New Delhi)': { lat: 28.5975, lng: 77.1738 },
+    'Connaught Place (Delhi)': { lat: 28.6315, lng: 77.2167 },
+    'India Gate (New Delhi)': { lat: 28.6129, lng: 77.2295 },
+    'Hauz Khas Village (Delhi)': { lat: 28.5494, lng: 77.1960 },
+
+    // Maharashtra & Western India
+    'Leopold Cafe (Colaba, Mumbai)': { lat: 18.9230, lng: 72.8318 },
+    'Marine Drive (Mumbai, MH)': { lat: 18.9438, lng: 72.8232 },
+    'Gateway of India (Mumbai)': { lat: 18.9220, lng: 72.8347 },
+
+    // Southern & Western Iconic Places
+    'MTR Mavalli Tiffin Room (Bengaluru)': { lat: 12.9550, lng: 77.5840 },
+    'MG Road Metro (Bengaluru, KA)': { lat: 12.9756, lng: 77.6066 },
+    'Koramangala 5th Block (Bengaluru)': { lat: 12.9352, lng: 77.6245 },
+    'Paradise Biryani (Secunderabad)': { lat: 17.4418, lng: 78.4982 },
+    'HITEC City (Hyderabad, TS)': { lat: 17.4435, lng: 78.3772 },
+    'Saravana Bhavan (T. Nagar, Chennai)': { lat: 13.0410, lng: 80.2330 },
+    'T. Nagar Bus Terminus (Chennai, TN)': { lat: 13.0418, lng: 80.2341 }
   };
 
   private static mockFetchSegmentAttributes(start: SegmentPoint, end: SegmentPoint, routeIndex: number): SegmentData {
@@ -297,7 +303,15 @@ export class RoutingService {
 
       const cleanInput = trimmed.toLowerCase().replace(/[^a-z0-9]/g, '');
 
-      // 1. Direct or partial match against static landmark dictionary
+      // 1a. Exact match against static landmark dictionary
+      for (const [key, coords] of Object.entries(this.INDIAN_LANDMARKS)) {
+        const cleanKey = key.toLowerCase().replace(/[^a-z0-9]/g, '');
+        if (cleanKey === cleanInput || key.toLowerCase() === trimmed.toLowerCase()) {
+          return { ...coords, name: key };
+        }
+      }
+
+      // 1b. Partial/fuzzy match against static landmark dictionary
       for (const [key, coords] of Object.entries(this.INDIAN_LANDMARKS)) {
         const cleanKey = key.toLowerCase().replace(/[^a-z0-9]/g, '');
         if (cleanKey.includes(cleanInput) || cleanInput.includes(cleanKey)) {
@@ -332,7 +346,7 @@ export class RoutingService {
         const baseLat = 22.7630;
         const baseLng = 88.3640;
         if (anchorCoords) {
-          return { lat: anchorCoords.lat - 0.015, lng: anchorCoords.lng - 0.008, name: trimmed };
+          return { lat: anchorCoords.lat + 0.0005, lng: anchorCoords.lng + 0.0005, name: trimmed };
         }
         return { lat: baseLat, lng: baseLng, name: trimmed };
       }

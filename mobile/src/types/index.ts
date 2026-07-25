@@ -54,4 +54,19 @@ export interface HeatmapPoint {
   intensity: number;
   category: string;
   ageDays: number;
+  radiusMeters?: number;
 }
+
+export const getCategoryRadiusMeters = (category: string): number => {
+  switch (category) {
+    case 'poor_lighting':
+      return 10;
+    case 'unsafe_area':
+      return 100;
+    case 'harassment':
+      return 150;
+    default:
+      return 50;
+  }
+};
+

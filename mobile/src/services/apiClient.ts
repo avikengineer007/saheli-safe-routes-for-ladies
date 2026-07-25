@@ -363,23 +363,38 @@ export class ApiClient {
     } catch (err) {}
 
     const defaultPoints: HeatmapPoint[] = [
-      // Ishapore & Barrackpore Region Incidents
-      { lat: 22.7660, lng: 88.3650, intensity: 0.85, category: 'poor_lighting', ageDays: 2 },
-      { lat: 22.7590, lng: 88.3610, intensity: 0.90, category: 'harassment', ageDays: 1 },
-      { lat: 22.7640, lng: 88.3590, intensity: 0.78, category: 'unsafe_area', ageDays: 3 },
+      // Ishapore & Barrackpore Region Hazards
+      { lat: 22.7660, lng: 88.3650, intensity: 0.85, category: 'poor_lighting', radiusMeters: 10, ageDays: 2 },
+      { lat: 22.7590, lng: 88.3610, intensity: 0.90, category: 'harassment', radiusMeters: 150, ageDays: 1 },
+      { lat: 22.7640, lng: 88.3590, intensity: 0.78, category: 'unsafe_area', radiusMeters: 100, ageDays: 3 },
+      { lat: 22.7680, lng: 88.3690, intensity: 0.70, category: 'poor_lighting', radiusMeters: 10, ageDays: 4 },
+      { lat: 22.7550, lng: 88.3670, intensity: 0.82, category: 'unsafe_area', radiusMeters: 100, ageDays: 2 },
+      { lat: 22.7710, lng: 88.3620, intensity: 0.88, category: 'harassment', radiusMeters: 150, ageDays: 1 },
 
-      // Greater Kolkata & Howrah Regions
-      { lat: 22.5530, lng: 88.3525, intensity: 0.85, category: 'poor_lighting', ageDays: 2 },
-      { lat: 22.5680, lng: 88.3720, intensity: 0.90, category: 'harassment', ageDays: 1 },
-      { lat: 22.5840, lng: 88.3440, intensity: 0.80, category: 'unsafe_area', ageDays: 4 },
-      { lat: 22.5740, lng: 88.4340, intensity: 0.75, category: 'poor_lighting', ageDays: 3 },
+      // Kolkata, Howrah & Salt Lake Sector Hazards
+      { lat: 22.5530, lng: 88.3525, intensity: 0.85, category: 'poor_lighting', radiusMeters: 10, ageDays: 2 },
+      { lat: 22.5680, lng: 88.3720, intensity: 0.90, category: 'harassment', radiusMeters: 150, ageDays: 1 },
+      { lat: 22.5840, lng: 88.3440, intensity: 0.80, category: 'unsafe_area', radiusMeters: 100, ageDays: 4 },
+      { lat: 22.5740, lng: 88.4340, intensity: 0.75, category: 'poor_lighting', radiusMeters: 10, ageDays: 3 },
+      { lat: 22.5480, lng: 88.3500, intensity: 0.88, category: 'harassment', radiusMeters: 150, ageDays: 2 },
+      { lat: 22.5620, lng: 88.3650, intensity: 0.72, category: 'poor_lighting', radiusMeters: 10, ageDays: 5 },
 
-      // Pan-India Metro Hazards
-      { lat: 28.6300, lng: 77.2180, intensity: 0.80, category: 'poor_lighting', ageDays: 1 },
-      { lat: 18.9410, lng: 72.8250, intensity: 0.95, category: 'harassment', ageDays: 2 },
-      { lat: 12.9730, lng: 77.6080, intensity: 0.75, category: 'unsafe_area', ageDays: 3 },
-      { lat: 17.4420, lng: 78.3760, intensity: 0.70, category: 'poor_lighting', ageDays: 1 },
-      { lat: 26.1540, lng: 91.7760, intensity: 0.80, category: 'unsafe_area', ageDays: 4 }
+      // Delhi NCR Hazards
+      { lat: 28.6300, lng: 77.2180, intensity: 0.80, category: 'poor_lighting', radiusMeters: 10, ageDays: 1 },
+      { lat: 28.6180, lng: 77.2250, intensity: 0.92, category: 'harassment', radiusMeters: 150, ageDays: 2 },
+      { lat: 28.5480, lng: 77.1930, intensity: 0.85, category: 'unsafe_area', radiusMeters: 100, ageDays: 3 },
+
+      // Mumbai, MH Hazards
+      { lat: 18.9410, lng: 72.8250, intensity: 0.95, category: 'harassment', radiusMeters: 150, ageDays: 2 },
+      { lat: 18.9250, lng: 72.8300, intensity: 0.70, category: 'poor_lighting', radiusMeters: 10, ageDays: 1 },
+
+      // Bengaluru, KA Hazards
+      { lat: 12.9730, lng: 77.6080, intensity: 0.75, category: 'unsafe_area', radiusMeters: 100, ageDays: 3 },
+      { lat: 12.9380, lng: 77.6200, intensity: 0.88, category: 'harassment', radiusMeters: 150, ageDays: 2 },
+
+      // Hyderabad & Guwahati Hazards
+      { lat: 17.4420, lng: 78.3760, intensity: 0.70, category: 'poor_lighting', radiusMeters: 10, ageDays: 1 },
+      { lat: 26.1540, lng: 91.7760, intensity: 0.80, category: 'unsafe_area', radiusMeters: 100, ageDays: 4 }
     ];
 
     return [...this.customUserIncidents, ...apiPoints, ...defaultPoints];
@@ -393,24 +408,72 @@ export class ApiClient {
     const destLabel = typeof dest === 'string' ? dest : (dest.name || 'Destination');
 
     const LANDMARKS: Record<string, { lat: number; lng: number }> = {
-      'Connaught Place (Delhi)': { lat: 28.6315, lng: 77.2167 },
-      'India Gate (New Delhi)': { lat: 28.6129, lng: 77.2295 },
-      'IIT Delhi (New Delhi)': { lat: 28.5450, lng: 77.1926 },
-      'Hauz Khas Village (Delhi)': { lat: 28.5494, lng: 77.1960 },
-      'Marine Drive (Mumbai, MH)': { lat: 18.9438, lng: 72.8232 },
-      'Gateway of India (Mumbai)': { lat: 18.9220, lng: 72.8347 },
-      'MG Road Metro (Bengaluru, KA)': { lat: 12.9756, lng: 77.6066 },
-      'T. Nagar Bus Terminus (Chennai, TN)': { lat: 13.0418, lng: 80.2341 },
-      'HITEC City (Hyderabad, TS)': { lat: 17.4435, lng: 78.3772 },
-      'Park Street Metro (Kolkata, WB)': { lat: 22.5552, lng: 88.3510 },
-      'Rabindra Sadan (Kolkata, WB)': { lat: 22.5416, lng: 88.3475 },
-      'Sealdah Station (Kolkata, WB)': { lat: 22.5670, lng: 88.3712 },
-      'Howrah Railway Station (WB)': { lat: 22.5839, lng: 88.3430 },
-      'Science City (Kolkata, WB)': { lat: 22.5402, lng: 88.3965 },
-      'Police Bazaar (Shillong, ML)': { lat: 25.5760, lng: 91.8847 },
-      'GS Road ABC Crossing (Guwahati, AS)': { lat: 26.1554, lng: 91.7783 },
-      'Pink City Hawa Mahal (Jaipur, RJ)': { lat: 26.9239, lng: 75.8267 },
-      'Hazratganj GPO (Lucknow, UP)': { lat: 26.8467, lng: 80.9462 }
+      // Barrackpore & Local Bengal Restaurants, Stores & Places
+      'dada boudi hotel': { lat: 22.7628, lng: 88.3642 },
+      'dada boudi restaurant': { lat: 22.7625, lng: 88.3638 },
+      'dada boudi biryani': { lat: 22.7628, lng: 88.3642 },
+      'reliance smart point': { lat: 22.7602, lng: 88.3615 },
+      'audreys korean cafe': { lat: 22.7588, lng: 88.3651 },
+      'barrackpore railway station': { lat: 22.7630, lng: 88.3640 },
+      'barrackpore station': { lat: 22.7630, lng: 88.3640 },
+      'barrackpore railway station (bp)': { lat: 22.7630, lng: 88.3640 },
+      'barrackpore r.s.': { lat: 22.7630, lng: 88.3640 },
+      'barrackpore train station': { lat: 22.7630, lng: 88.3640 },
+      'barrackpore cantonment': { lat: 22.7610, lng: 88.3580 },
+      'mangal pandey park': { lat: 22.7570, lng: 88.3530 },
+      'ishapore railway station': { lat: 22.7820, lng: 88.3700 },
+      'ichapur water tank': { lat: 22.7805, lng: 88.3720 },
+      'nawabganj barrackpore': { lat: 22.7750, lng: 88.3610 },
+
+      // Iconic Kolkata & Bengal Restaurants, Malls & Hubs
+      'flurys park street': { lat: 22.5542, lng: 88.3520 },
+      'peter cat': { lat: 22.5545, lng: 88.3525 },
+      'mocambo': { lat: 22.5543, lng: 88.3523 },
+      'arsalan biryani park circus': { lat: 22.5440, lng: 88.3685 },
+      '6 ballygunge place': { lat: 22.5270, lng: 88.3650 },
+      'oly pub': { lat: 22.5538, lng: 88.3518 },
+      'bhojohori manna': { lat: 22.5810, lng: 88.4120 },
+      'quest mall': { lat: 22.5390, lng: 88.3658 },
+      'south city mall': { lat: 22.5012, lng: 88.3614 },
+      'city centre 1 salt lake': { lat: 22.5870, lng: 88.4080 },
+      'mani square': { lat: 22.5710, lng: 88.3980 },
+      'park street metro': { lat: 22.5552, lng: 88.3510 },
+      'rabindra sadan': { lat: 22.5416, lng: 88.3475 },
+      'sealdah station': { lat: 22.5670, lng: 88.3712 },
+      'howrah railway station': { lat: 22.5839, lng: 88.3430 },
+      'victoria memorial': { lat: 22.5448, lng: 88.3426 },
+      'eden gardens': { lat: 22.5646, lng: 88.3433 },
+      'salt lake sector v': { lat: 22.5731, lng: 88.4337 },
+
+      // Pan-India Iconic Restaurants, Cafes & Places
+      'karim restaurant jama masjid': { lat: 28.6508, lng: 77.2335 },
+      'bukhara itc maurya': { lat: 28.5975, lng: 77.1738 },
+      'indian coffee house cp': { lat: 28.6318, lng: 77.2185 },
+      'connaught place delhi': { lat: 28.6315, lng: 77.2167 },
+      'india gate new delhi': { lat: 28.6129, lng: 77.2295 },
+      'hauz khas village': { lat: 28.5494, lng: 77.1960 },
+      'leopold cafe colaba': { lat: 18.9230, lng: 72.8318 },
+      'britannia and co': { lat: 18.9372, lng: 72.8378 },
+      'bademiya colaba': { lat: 18.9225, lng: 72.8322 },
+      'marine drive mumbai': { lat: 18.9438, lng: 72.8232 },
+      'gateway of india': { lat: 18.9220, lng: 72.8347 },
+      'vidhyarthi bhavan': { lat: 12.9460, lng: 77.5728 },
+      'mtr mavalli tiffin room': { lat: 12.9550, lng: 77.5840 },
+      'toit brewpub indiranagar': { lat: 12.9790, lng: 77.6400 },
+      'mg road metro bengaluru': { lat: 12.9756, lng: 77.6066 },
+      'koramangala 5th block': { lat: 12.9352, lng: 77.6245 },
+      'paradise biryani secunderabad': { lat: 17.4418, lng: 78.4982 },
+      'bawarchi restaurant rtc x roads': { lat: 17.4060, lng: 78.4900 },
+      'hitec city hyderabad': { lat: 17.4435, lng: 78.3772 },
+      'charminar hyderabad': { lat: 17.3616, lng: 78.4747 },
+      'saravana bhavan t nagar': { lat: 13.0410, lng: 80.2330 },
+      't nagar bus terminus': { lat: 13.0418, lng: 80.2341 },
+      'chokhi dhani jaipur': { lat: 26.7680, lng: 75.8340 },
+      'hawa mahal jaipur': { lat: 26.9239, lng: 75.8267 },
+      'tundey kababi aminabad': { lat: 26.8480, lng: 80.9250 },
+      'hazratganj gpo': { lat: 26.8467, lng: 80.9462 },
+      'police bazaar shillong': { lat: 25.5760, lng: 91.8847 },
+      'gs road abc crossing': { lat: 26.1554, lng: 91.7783 }
     };
 
     const resolveSingleLoc = async (
@@ -423,7 +486,15 @@ export class ApiClient {
       const name = loc.trim();
       const cleanName = name.toLowerCase().replace(/[^a-z0-9]/g, '');
 
-      // Check landmarks first
+      // 1a. Exact landmark match first
+      for (const [key, coords] of Object.entries(LANDMARKS)) {
+        const cleanKey = key.toLowerCase().replace(/[^a-z0-9]/g, '');
+        if (cleanKey === cleanName || key.toLowerCase() === name.toLowerCase()) {
+          return coords;
+        }
+      }
+
+      // 1b. Fuzzy match where landmark contains or is contained in query
       for (const [key, coords] of Object.entries(LANDMARKS)) {
         const cleanKey = key.toLowerCase().replace(/[^a-z0-9]/g, '');
         if (cleanKey.includes(cleanName) || cleanName.includes(cleanKey)) {
@@ -431,11 +502,11 @@ export class ApiClient {
         }
       }
 
-      // Try OpenStreetMap Nominatim Client-Side Geocoding
+      // 2. OpenStreetMap Nominatim Live Geocoding Search for restaurants, cafes & places across India
       try {
-        const query = name.toLowerCase().includes('india') ? name : `${name}, India`;
+        const searchQuery = name.toLowerCase().includes('india') ? name : `${name}, India`;
         const res = await fetch(
-          `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&countrycodes=in&limit=1`
+          `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery)}&countrycodes=in&limit=1`
         );
         if (res.ok) {
           const data = await res.json();
@@ -447,29 +518,29 @@ export class ApiClient {
         }
       } catch (_) {}
 
-      // Common city fallbacks
-      const lower = name.toLowerCase();
-      if (lower.includes('sealdah') || lower.includes('kolkata') || lower.includes('calcutta') || lower.includes('park street') || lower.includes('howrah')) {
-        return { lat: 22.5670, lng: 88.3712 };
+      // 3. Smart Anchor / Proximity Fallback relative to current location
+      if (anchor) {
+        let hash = 0;
+        for (let i = 0; i < name.length; i++) hash = (hash * 31 + name.charCodeAt(i)) & 0xffffffff;
+        return {
+          lat: anchor.lat + (((hash % 20) + 2) / 10000),
+          lng: anchor.lng + ((((hash >> 2) % 20) + 2) / 10000)
+        };
       }
-      if (lower.includes('barrackpore') || lower.includes('nawabganj') || lower.includes('ishapore')) {
-        const base = { lat: 22.7630, lng: 88.3640 };
-        return anchor ? { lat: anchor.lat - 0.012, lng: anchor.lng - 0.006 } : base;
+
+      // 4. Regional fallback if no anchor available
+      const lower = name.toLowerCase();
+      if (lower.includes('barrackpore') || lower.includes('ishapore') || lower.includes('nawabganj')) {
+        return { lat: 22.7630, lng: 88.3640 };
+      }
+      if (lower.includes('sealdah') || lower.includes('kolkata') || lower.includes('calcutta') || lower.includes('howrah')) {
+        return { lat: 22.5670, lng: 88.3712 };
       }
       if (lower.includes('mumbai')) return { lat: 18.9438, lng: 72.8232 };
       if (lower.includes('bengaluru') || lower.includes('bangalore')) return { lat: 12.9756, lng: 77.6066 };
       if (lower.includes('delhi')) return { lat: 28.6315, lng: 77.2167 };
 
-      if (anchor) {
-        let hash = 0;
-        for (let i = 0; i < name.length; i++) hash = (hash * 31 + name.charCodeAt(i)) & 0xffffffff;
-        return {
-          lat: anchor.lat + (((hash % 20) + 5) / 10000),
-          lng: anchor.lng + ((((hash >> 2) % 20) + 5) / 10000)
-        };
-      }
-
-      return { lat: 28.6315, lng: 77.2167 };
+      return { lat: 22.7630, lng: 88.3640 };
     };
 
     // Smart Order: Resolve destination first if origin is generic "My Current Location"
@@ -504,6 +575,15 @@ export class ApiClient {
           for (let idx = 0; idx < osrmRoutes.length; idx++) {
             const r = osrmRoutes[idx];
             const poly: Array<[number, number]> = r.geometry.coordinates.map((c: [number, number]) => [c[1], c[0]] as [number, number]);
+            if (poly.length > 0) {
+              if (Math.abs(poly[0][0] - origPt.lat) > 0.0001 || Math.abs(poly[0][1] - origPt.lng) > 0.0001) {
+                poly.unshift([origPt.lat, origPt.lng]);
+              }
+              const last = poly[poly.length - 1];
+              if (Math.abs(last[0] - destPt.lat) > 0.0001 || Math.abs(last[1] - destPt.lng) > 0.0001) {
+                poly.push([destPt.lat, destPt.lng]);
+              }
+            }
             const dist = Math.round(r.distance);
             const duration = Math.max(3, Math.round(r.duration / 60));
             const tagLabel = idx === 0 ? 'Primary Street Route' : `Alternate Option ${idx}`;

@@ -37,8 +37,8 @@ const MainAppContent: React.FC = () => {
 
   // User real live GPS location
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number }>({
-    lat: 28.6315,
-    lng: 77.2167
+    lat: 22.7630,
+    lng: 88.3640
   });
   const [gpsAcquired, setGpsAcquired] = useState(false);
 
@@ -47,8 +47,8 @@ const MainAppContent: React.FC = () => {
   const [sosContactPhone, setSosContactPhone] = useState('');
   const [reportModalOpen, setReportModalOpen] = useState(false);
   const [reportPinLocation, setReportPinLocation] = useState<{ lat: number; lng: number }>({
-    lat: 28.6315,
-    lng: 77.2167
+    lat: 22.7630,
+    lng: 88.3640
   });
 
   // Fetch real-time live browser/device GPS location immediately with IP geolocation fallback
@@ -66,7 +66,7 @@ const MainAppContent: React.FC = () => {
             setUserLocation(ipLoc);
             setReportPinLocation(ipLoc);
             setGpsAcquired(true);
-            handleCalculateRoutes(placeLabel, 'Sealdah Station (Kolkata, WB)', 25, ipLoc);
+            handleCalculateRoutes(placeLabel, 'Barrackpore Railway Station', 25, ipLoc);
           }
         }
       } catch (_) {}
@@ -83,7 +83,7 @@ const MainAppContent: React.FC = () => {
           setUserLocation(newLoc);
           setReportPinLocation(newLoc);
           setGpsAcquired(true);
-          handleCalculateRoutes('My Current Location', 'Sealdah Station (Kolkata, WB)', 25, newLoc);
+          handleCalculateRoutes('My Current Location', 'Barrackpore Railway Station', 25, newLoc);
         },
         (error) => {
           console.warn('[SAHELI GPS] Direct getCurrentPosition error:', error.message);
@@ -122,7 +122,7 @@ const MainAppContent: React.FC = () => {
   useEffect(() => {
     loadHeatmapData();
     if (!gpsAcquired) {
-      handleCalculateRoutes('My Current Location', 'Sealdah Station (Kolkata, WB)', 25, userLocation);
+      handleCalculateRoutes('My Current Location', 'Barrackpore Railway Station', 25, userLocation);
     }
   }, []);
 
