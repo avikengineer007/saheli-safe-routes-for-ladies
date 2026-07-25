@@ -8,7 +8,7 @@ declare global {
 }
 
 const API_BASE_URL = typeof window !== 'undefined' && window.location.hostname === 'localhost'
-  ? 'http://localhost:4000/api'
+  ? 'http://localhost:3001/api'
   : 'https://saheli-backend-api.onrender.com/api';
 
 const ROUTE_CONFIGS: Array<{ tag: 'safest' | 'fastest' | 'balanced'; score: number; label: string; safety: string[] }> = [
