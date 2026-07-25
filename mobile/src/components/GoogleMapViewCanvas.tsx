@@ -96,6 +96,13 @@ export const GoogleMapViewCanvas: React.FC<GoogleMapViewCanvasProps> = (props) =
         ]
       });
 
+      // Force map to repaint tiles after container is fully visible
+      setTimeout(() => {
+        if (googleMapInstance.current) {
+          window.google.maps.event.trigger(googleMapInstance.current, 'resize');
+        }
+      }, 300);
+
       // Map Click Event for incident reporting
       googleMapInstance.current.addListener('click', (e: any) => {
         if (e.latLng && onMapClick) {

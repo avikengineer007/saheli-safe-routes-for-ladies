@@ -18,7 +18,7 @@ import { AlertCircle, PlusCircle } from 'lucide-react';
 const MainAppContent: React.FC = () => {
   const { isElderlyMode } = useElderlyMode();
 
-  const [activeTab, setActiveTab] = useState<'home' | 'plan' | 'live' | 'heatmap' | 'contacts'>('home');
+  const [activeTab, setActiveTab] = useState<'home' | 'plan' | 'live' | 'heatmap' | 'contacts'>('plan');
   const [showHeatmap, setShowHeatmap] = useState(true);
 
   // Family Contacts state

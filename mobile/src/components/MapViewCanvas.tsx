@@ -62,6 +62,13 @@ export const MapViewCanvas: React.FC<MapViewCanvasProps> = ({
       });
 
       leafletMapRef.current = map;
+
+      // Fix grey tiles bug: Leaflet needs resize hint after container is fully visible
+      setTimeout(() => {
+        if (leafletMapRef.current) {
+          leafletMapRef.current.invalidateSize();
+        }
+      }, 300);
     }
 
     return () => {
