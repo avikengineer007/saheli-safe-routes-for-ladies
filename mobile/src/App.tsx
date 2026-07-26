@@ -321,17 +321,7 @@ const MainAppContent: React.FC = () => {
           />
         ) : (
           <>
-            {(activeTab === 'home' || activeTab === 'contacts') && (
-              <LandingPageView
-                onNavigateToPlan={() => setActiveTab('plan')}
-                onNavigateToLive={() => setActiveTab('live')}
-                onNavigateToHeatmap={() => setActiveTab('heatmap')}
-                onTriggerSOS={handleTriggerSOS}
-                onOpenFamilyContacts={() => setFamilyModalOpen(true)}
-              />
-            )}
-
-            {(activeTab === 'plan' || activeTab === 'live' || activeTab === 'heatmap') && (
+            {(activeTab === 'home' || activeTab === 'plan' || activeTab === 'live' || activeTab === 'heatmap') && (
               <>
                 {/* Real Google Maps Container for Route Planning & Live Tracking */}
                 <GoogleMapViewCanvas
@@ -364,7 +354,7 @@ const MainAppContent: React.FC = () => {
               </>
             )}
 
-            {activeTab === 'plan' && (
+            {(activeTab === 'home' || activeTab === 'plan') && (
               <RoutePlannerView
                 candidates={candidates}
                 selectedRouteId={selectedRouteId}
@@ -374,6 +364,16 @@ const MainAppContent: React.FC = () => {
                 isElderlyMode={false}
                 disclaimerNotice={disclaimerNotice}
                 userLocation={userLocation}
+              />
+            )}
+
+            {(activeTab === 'home' || activeTab === 'contacts') && (
+              <LandingPageView
+                onNavigateToPlan={() => setActiveTab('plan')}
+                onNavigateToLive={() => setActiveTab('live')}
+                onNavigateToHeatmap={() => setActiveTab('heatmap')}
+                onTriggerSOS={handleTriggerSOS}
+                onOpenFamilyContacts={() => setFamilyModalOpen(true)}
               />
             )}
 
