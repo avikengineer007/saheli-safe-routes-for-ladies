@@ -48,14 +48,16 @@ export const GoogleMapViewCanvas: React.FC<GoogleMapViewCanvasProps> = (props) =
   // Check if window.google.maps is available and catch auth failure
   useEffect(() => {
     (window as any).gm_authFailure = () => {
-      console.error('[SAHELI] Google Maps API key authentication failed.');
+      console.warn('[SAHELI] Google Maps API key authentication failed, switching to Leaflet OpenStreetMap engine.');
       (window as any).googleMapsFailed = true;
+      googleMapInstance.current = null;
       setMapAuthFailed(true);
       setMapsLoaded(false);
     };
 
     const checkGoogleMaps = () => {
       if ((window as any).googleMapsFailed) {
+        googleMapInstance.current = null;
         setMapAuthFailed(true);
         setMapsLoaded(false);
         return;
@@ -72,7 +74,20 @@ export const GoogleMapViewCanvas: React.FC<GoogleMapViewCanvasProps> = (props) =
 
     checkGoogleMaps();
     const interval = setInterval(checkGoogleMaps, 300);
-    return () => clearInterval(interval);
+
+    // Timeout safety fallback: If Google Maps doesn't validate in 2.5s, use Leaflet
+    const safetyTimeout = setTimeout(() => {
+      if (!(window.google && window.google.maps && window.google.maps.Map)) {
+        (window as any).googleMapsFailed = true;
+        setMapAuthFailed(true);
+        setMapsLoaded(false);
+      }
+    }, 2500);
+
+    return () => {
+      clearInterval(interval);
+      clearTimeout(safetyTimeout);
+    };
   }, []);
 
   // Initialize Map Instance
@@ -304,7 +319,7 @@ export const GoogleMapViewCanvas: React.FC<GoogleMapViewCanvasProps> = (props) =
     }
   }, [userLocation, activeJourneyLocation, isDeviated, candidates.length, mapsLoaded]);
 
-  if (mapAuthFailed || !mapsLoaded) {
+  if (mapAuthFailed || !mapsLoaded || (window as any).googleMapsFailed) {
     return <MapViewCanvas {...props} />;
   }
 
