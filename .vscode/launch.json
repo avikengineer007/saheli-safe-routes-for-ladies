@@ -1,0 +1,52 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "msedge",
+      "request": "launch",
+      "name": "Debug Mobile Web App (Edge)",
+      "url": "http://localhost:3000",
+      "webRoot": "${workspaceFolder}/mobile",
+      "runtimeExecutable": "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe",
+      "preLaunchTask": "Start Mobile Dev Server",
+      "sourceMapPathOverrides": {
+        "webpack:///src/*": "${webRoot}/src/*"
+      }
+    },
+    {
+      "type": "chrome",
+      "request": "launch",
+      "name": "Debug Mobile Web App (Chrome)",
+      "url": "http://localhost:3000",
+      "webRoot": "${workspaceFolder}/mobile",
+      "preLaunchTask": "Start Mobile Dev Server",
+      "sourceMapPathOverrides": {
+        "webpack:///src/*": "${webRoot}/src/*"
+      }
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Debug Backend API (Node.js)",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": [
+        "ts-node-dev",
+        "--respawn",
+        "--transpile-only",
+        "src/server.ts"
+      ],
+      "cwd": "${workspaceFolder}/backend",
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen"
+    }
+  ],
+  "compounds": [
+    {
+      "name": "Debug Full Stack (Mobile + Backend)",
+      "configurations": [
+        "Debug Backend API (Node.js)",
+        "Debug Mobile Web App (Edge)"
+      ]
+    }
+  ]
+}

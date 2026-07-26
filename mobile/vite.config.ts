@@ -7,7 +7,15 @@ export default defineConfig(({ mode }) => {
     plugins: [react()],
     server: {
       port: 3000,
-      host: true
+      strictPort: true,
+      host: true,
+      proxy: {
+        '/api': {
+          target: 'http://localhost:4000',
+          changeOrigin: true,
+          secure: false
+        }
+      }
     },
     define: {
       'import.meta.env.VITE_GOOGLE_MAPS_API_KEY': JSON.stringify(env.VITE_GOOGLE_MAPS_API_KEY)

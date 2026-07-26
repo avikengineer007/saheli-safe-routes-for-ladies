@@ -317,13 +317,26 @@ export const PlaceSearchInput: React.FC<PlaceSearchInputProps> = ({
             reject(new Error('Geolocation unsupported'));
           }
         }).catch(async () => {
-          const res = await fetch('https://ipapi.co/json/');
-          if (res.ok) {
-            const data = await res.json();
-            if (data.latitude && data.longitude) {
-              return { lat: parseFloat(data.latitude), lng: parseFloat(data.longitude) };
+          try {
+            const res = await fetch('https://ipwho.is/');
+            if (res.ok) {
+              const data = await res.json();
+              if (data.latitude && data.longitude) {
+                return { lat: parseFloat(data.latitude), lng: parseFloat(data.longitude) };
+              }
             }
-          }
+          } catch (_) {}
+
+          try {
+            const res2 = await fetch('http://ip-api.com/json/');
+            if (res2.ok) {
+              const data2 = await res2.json();
+              if (data2.lat && data2.lon) {
+                return { lat: parseFloat(data2.lat), lng: parseFloat(data2.lon) };
+              }
+            }
+          } catch (_) {}
+
           throw new Error('IP Geolocation fallback failed');
         });
       }

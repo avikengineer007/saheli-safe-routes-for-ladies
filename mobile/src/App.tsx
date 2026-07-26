@@ -51,45 +51,94 @@ const MainAppContent: React.FC = () => {
     lng: 88.3640
   });
 
-  // Fetch real-time live browser/device GPS location immediately with IP geolocation fallback
+  // Fetch real-time live browser/device GPS location immediately with multi-provider IP fallback
   useEffect(() => {
     let active = true;
 
     const fetchIpFallbackLocation = async () => {
+      // 1. Try ipwho.is (Primary Fast & Unblocked IP Tracer)
+      try {
+        const res = await fetch('https://ipwho.is/');
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.latitude && data.longitude && active) {
+            const ipLoc = { lat: parseFloat(data.latitude), lng: parseFloat(data.longitude) };
+            const placeLabel = data.city ? `${data.city}, ${data.region || 'India'}` : 'My Current Location';
+            console.log('[SAHELI IP TRACE] Live location acquired via IP:', placeLabel, ipLoc);
+            setUserLocation(ipLoc);
+            setReportPinLocation(ipLoc);
+            setGpsAcquired(true);
+            handleCalculateRoutes(placeLabel, 'Barrackpore Railway Station', 25, ipLoc);
+            return;
+          }
+        }
+      } catch (_) {}
+
+      // 2. Try ip-api.com as secondary backup
+      try {
+        const res = await fetch('http://ip-api.com/json/');
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.lat && data.lon && active) {
+            const ipLoc = { lat: parseFloat(data.lat), lng: parseFloat(data.lon) };
+            const placeLabel = data.city ? `${data.city}, ${data.regionName || 'India'}` : 'My Current Location';
+            console.log('[SAHELI IP TRACE] Live location acquired via Backup IP API:', placeLabel, ipLoc);
+            setUserLocation(ipLoc);
+            setReportPinLocation(ipLoc);
+            setGpsAcquired(true);
+            handleCalculateRoutes(placeLabel, 'Barrackpore Railway Station', 25, ipLoc);
+            return;
+          }
+        }
+      } catch (_) {}
+
+      // 3. Try ipapi.co as tertiary backup
       try {
         const res = await fetch('https://ipapi.co/json/');
         if (res.ok) {
           const data = await res.json();
-          if (data && data.latitude && data.longitude && active && !gpsAcquired) {
+          if (data && data.latitude && data.longitude && active) {
             const ipLoc = { lat: parseFloat(data.latitude), lng: parseFloat(data.longitude) };
             const placeLabel = data.city ? `${data.city}, ${data.region || 'India'}` : 'My Current Location';
             setUserLocation(ipLoc);
             setReportPinLocation(ipLoc);
             setGpsAcquired(true);
             handleCalculateRoutes(placeLabel, 'Barrackpore Railway Station', 25, ipLoc);
+            return;
           }
         }
       } catch (_) {}
     };
 
+    const handleSuccess = (position: GeolocationPosition) => {
+      if (!active) return;
+      const newLoc = {
+        lat: position.coords.latitude,
+        lng: position.coords.longitude
+      };
+      setUserLocation(newLoc);
+      setReportPinLocation(newLoc);
+      setGpsAcquired(true);
+      handleCalculateRoutes('My Current Location', 'Barrackpore Railway Station', 25, newLoc);
+    };
+
     if ('geolocation' in navigator) {
+      // First try with High Accuracy (GPS hardware chip / mobile device)
       navigator.geolocation.getCurrentPosition(
-        (position) => {
-          if (!active) return;
-          const newLoc = {
-            lat: position.coords.latitude,
-            lng: position.coords.longitude
-          };
-          setUserLocation(newLoc);
-          setReportPinLocation(newLoc);
-          setGpsAcquired(true);
-          handleCalculateRoutes('My Current Location', 'Barrackpore Railway Station', 25, newLoc);
-        },
+        handleSuccess,
         (error) => {
-          console.warn('[SAHELI GPS] Direct getCurrentPosition error:', error.message);
-          fetchIpFallbackLocation();
+          console.warn('[SAHELI GPS] High accuracy failed, retrying low accuracy:', error.message);
+          // Retry with Low Accuracy
+          navigator.geolocation.getCurrentPosition(
+            handleSuccess,
+            (err2) => {
+              console.warn('[SAHELI GPS] Low accuracy failed, using IP geolocation fallback:', err2.message);
+              fetchIpFallbackLocation();
+            },
+            { enableHighAccuracy: false, timeout: 6000, maximumAge: 60000 }
+          );
         },
-        { enableHighAccuracy: false, timeout: 8000, maximumAge: 10000 }
+        { enableHighAccuracy: true, timeout: 8000, maximumAge: 30000 }
       );
 
       const watchId = navigator.geolocation.watchPosition(
@@ -116,7 +165,7 @@ const MainAppContent: React.FC = () => {
     } else {
       fetchIpFallbackLocation();
     }
-  }, [gpsAcquired]);
+  }, []);
 
   // Initial heatmap load on mount
   useEffect(() => {

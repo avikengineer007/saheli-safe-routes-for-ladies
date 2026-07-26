@@ -146,6 +146,25 @@ export class ApiClient {
     return { score, explanations, tag, segments };
   }
 
+  private static parseLocationQuery(
+    loc: string | { lat: number; lng: number; name?: string }
+  ): string | { lat: number; lng: number } {
+    if (typeof loc !== 'string') {
+      return { lat: loc.lat, lng: loc.lng };
+    }
+    const trimmed = loc.trim();
+    const coordMatch = trimmed.match(/^\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*$/);
+    if (coordMatch) {
+      const lat = parseFloat(coordMatch[1]);
+      const lng = parseFloat(coordMatch[2]);
+      if (!isNaN(lat) && !isNaN(lng)) {
+        return { lat, lng };
+      }
+    }
+    const clean = this.cleanPlaceName(trimmed);
+    return clean.toLowerCase().includes('india') ? clean : `${clean}, India`;
+  }
+
   private static async fetchGoogleDirectionsBrowser(
     origin: string | { lat: number; lng: number; name?: string },
     dest: string | { lat: number; lng: number; name?: string }
@@ -164,16 +183,8 @@ export class ApiClient {
       const timer = setTimeout(() => resolve(null), 8000);
 
       try {
-        const cleanOrigin = typeof origin === 'string' ? this.cleanPlaceName(origin) : origin;
-        const cleanDest = typeof dest === 'string' ? this.cleanPlaceName(dest) : dest;
-
-        const originQuery = typeof cleanOrigin === 'string'
-          ? (cleanOrigin.toLowerCase().includes('india') ? cleanOrigin : `${cleanOrigin}, India`)
-          : { lat: cleanOrigin.lat, lng: cleanOrigin.lng };
-
-        const destQuery = typeof cleanDest === 'string'
-          ? (cleanDest.toLowerCase().includes('india') ? cleanDest : `${cleanDest}, India`)
-          : { lat: cleanDest.lat, lng: cleanDest.lng };
+        const originQuery = this.parseLocationQuery(origin);
+        const destQuery = this.parseLocationQuery(dest);
 
         const originLabel = typeof origin === 'string' ? origin : (origin.name || 'Origin');
         const destLabel = typeof dest === 'string' ? dest : (dest.name || 'Destination');
@@ -484,6 +495,15 @@ export class ApiClient {
         return { lat: loc.lat, lng: loc.lng };
       }
       const name = loc.trim();
+
+      // Check if string is coordinate format "22.56962, 88.36960"
+      const coordMatch = name.match(/^\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*$/);
+      if (coordMatch) {
+        const lat = parseFloat(coordMatch[1]);
+        const lng = parseFloat(coordMatch[2]);
+        if (!isNaN(lat) && !isNaN(lng)) return { lat, lng };
+      }
+
       const cleanName = name.toLowerCase().replace(/[^a-z0-9]/g, '');
 
       // 1a. Exact landmark match first
@@ -543,13 +563,16 @@ export class ApiClient {
       return { lat: 22.7630, lng: 88.3640 };
     };
 
-    // Smart Order: Resolve destination first if origin is generic "My Current Location"
+    // Smart Order: Resolve destination first ONLY if origin is generic string with NO lat/lng coords
     let origPt: { lat: number; lng: number };
     let destPt: { lat: number; lng: number };
 
-    const isGenericOrigin = typeof origin === 'string' && (
-      origin.toLowerCase().includes('current location') ||
-      origin.toLowerCase().includes('my location')
+    const isGenericOrigin = (
+      typeof origin === 'object' && origin !== null && 'lat' in origin
+    ) ? false : (
+      typeof origin === 'string' &&
+      (origin.toLowerCase().includes('current location') || origin.toLowerCase().includes('my location')) &&
+      !origin.match(/^\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*$/)
     );
 
     if (isGenericOrigin) {

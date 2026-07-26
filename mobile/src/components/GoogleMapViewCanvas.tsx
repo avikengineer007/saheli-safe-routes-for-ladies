@@ -42,18 +42,21 @@ export const GoogleMapViewCanvas: React.FC<GoogleMapViewCanvasProps> = (props) =
   const activeUserMarkerRef = useRef<any>(null);
 
   const [mapsLoaded, setMapsLoaded] = useState(false);
+  const [mapAuthFailed, setMapAuthFailed] = useState(false);
   const [routeStatus, setRouteStatus] = useState<string>('');
 
   // Check if window.google.maps is available and catch auth failure
   useEffect(() => {
     (window as any).gm_authFailure = () => {
-      console.warn('[SAHELI] Google Maps API key invalid or unbilled. Falling back to built-in MapViewCanvas.');
+      console.error('[SAHELI] Google Maps API key authentication failed.');
       (window as any).googleMapsFailed = true;
+      setMapAuthFailed(true);
       setMapsLoaded(false);
     };
 
     const checkGoogleMaps = () => {
       if ((window as any).googleMapsFailed) {
+        setMapAuthFailed(true);
         setMapsLoaded(false);
         return;
       }
@@ -301,7 +304,7 @@ export const GoogleMapViewCanvas: React.FC<GoogleMapViewCanvasProps> = (props) =
     }
   }, [userLocation, activeJourneyLocation, isDeviated, candidates.length, mapsLoaded]);
 
-  if (!mapsLoaded) {
+  if (mapAuthFailed || !mapsLoaded) {
     return <MapViewCanvas {...props} />;
   }
 
