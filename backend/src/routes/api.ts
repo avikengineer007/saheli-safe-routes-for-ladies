@@ -2,6 +2,8 @@ import { Router, Request, Response } from 'express';
 import { RoutingService } from '../services/routingService';
 import { JourneyMonitorService, ActiveJourneyState } from '../services/journeyMonitor';
 import { IncidentService } from '../services/incidentService';
+import { AuthService, AuthenticatedRequest } from '../services/authService';
+import { PersistenceService } from '../services/persistenceService';
 
 export const apiRouter = Router();
 
@@ -126,6 +128,76 @@ apiRouter.post('/journey/ping', (req: Request, res: Response) => {
 });
 
 /**
+ * Send Phone OTP Verification Code
+ * Enforces per-phone rate limit (max 3 sends per hour)
+ */
+apiRouter.post('/auth/otp/send', async (req: Request, res: Response) => {
+  try {
+    const { phone } = req.body;
+    if (!phone) {
+      return res.status(400).json({ error: 'Phone number is required.' });
+    }
+    const result = await AuthService.sendOtp(phone);
+    res.json(result);
+  } catch (err: any) {
+    res.status(429).json({ error: err.message || 'Error sending OTP' });
+  }
+});
+
+/**
+ * Verify Phone OTP and Generate Session Token
+ */
+apiRouter.post('/auth/otp/verify', async (req: Request, res: Response) => {
+  try {
+    const { phone, otp, name } = req.body;
+    if (!phone || !otp) {
+      return res.status(400).json({ error: 'Phone and OTP code are required.' });
+    }
+    const result = await AuthService.verifyOtpAndLogin(phone, otp, name);
+    res.json({
+      success: true,
+      token: result.token,
+      user: {
+        id: result.user.id,
+        phone: result.user.phone,
+        name: result.user.name,
+        trustScore: result.user.trustScore,
+        createdAt: result.user.createdAt
+      }
+    });
+  } catch (err: any) {
+    res.status(401).json({ error: err.message || 'OTP verification failed.' });
+  }
+});
+
+/**
+ * Walked Route User Feedback Endpoint (Step 11 & Priority 3)
+ * Persisted to disk storage to fine-tune Kolkata deterministic route scoring
+ */
+apiRouter.post('/journey/feedback', (req: Request, res: Response) => {
+  try {
+    const { journeyId, safetyRating, lightingAdequate, detourWorthIt, notes } = req.body;
+    
+    const record = PersistenceService.getInstance().recordFeedback({
+      journeyId,
+      safetyRating: Number(safetyRating) || 5,
+      lightingAdequate: lightingAdequate === 'adequate' || lightingAdequate === true,
+      detourWorthIt: Boolean(detourWorthIt),
+      notes: notes ? String(notes).trim() : undefined
+    });
+
+    res.json({
+      success: true,
+      message: 'Thank you for your feedback! This walked-route data is directly calibrating route safety scores in Kolkata.',
+      feedbackId: record.id,
+      recordedAt: record.createdAt
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || 'Error recording feedback' });
+  }
+});
+
+/**
  * Deterministic SOS Escalation Trigger
  */
 apiRouter.post('/journey/sos', (req: Request, res: Response) => {
@@ -167,30 +239,36 @@ apiRouter.post('/journey/sos', (req: Request, res: Response) => {
 });
 
 /**
- * Submit Community Incident Report (Gated & Advisory Triage)
+ * Submit Community Incident Report (Gated by Real Authentication & Corroboration Engine)
+ * §12.3: Unauthenticated submission is an abuse vector. 
+ * Trust scores and account age are strictly derived from the verified user session, NEVER from client body.
  */
-apiRouter.post('/incidents/report', async (req: Request, res: Response) => {
-  try {
-    const { userId, userTrustScore, userAccountAgeDays, lat, lng, category, description } = req.body;
+apiRouter.post('/incidents/report', (req: Request, res: Response) => {
+  AuthService.requireAuth(req as AuthenticatedRequest, res, async () => {
+    try {
+      const authUser = (req as AuthenticatedRequest).user!;
+      const { lat, lng, category, description } = req.body;
 
-    if (lat === undefined || lng === undefined || !category) {
-      return res.status(400).json({ error: 'lat, lng, and category are required.' });
+      if (lat === undefined || lng === undefined || !category) {
+        return res.status(400).json({ error: 'lat, lng, and category are required.' });
+      }
+
+      const result = await IncidentService.submitReport({
+        userId: authUser.id,
+        userPhone: authUser.phone,
+        userTrustScore: authUser.trustScore,
+        userAccountAgeDays: authUser.accountAgeDays,
+        lat: Number(lat),
+        lng: Number(lng),
+        category,
+        description
+      });
+
+      res.json(result);
+    } catch (err: any) {
+      res.status(400).json({ error: err.message || 'Error submitting report' });
     }
-
-    const result = await IncidentService.submitReport({
-      userId: userId || 'user_anon_1',
-      userTrustScore: userTrustScore !== undefined ? userTrustScore : 0.7,
-      userAccountAgeDays: userAccountAgeDays !== undefined ? userAccountAgeDays : 10,
-      lat,
-      lng,
-      category,
-      description
-    });
-
-    res.json(result);
-  } catch (err: any) {
-    res.status(400).json({ error: err.message || 'Error submitting report' });
-  }
+  });
 });
 
 /**

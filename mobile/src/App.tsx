@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { ElderlyModeProvider, useElderlyMode } from './context/ElderlyModeContext';
 import { Header } from './components/Header';
 import { GoogleMapViewCanvas } from './components/GoogleMapViewCanvas';
@@ -11,15 +11,18 @@ import { LandingPageView } from './components/LandingPageView';
 import { ElderlyModeView } from './components/ElderlyModeView';
 import { FamilyContactsModal } from './components/FamilyContactsModal';
 import { BottomNavBar } from './components/BottomNavBar';
+import { WalkFeedbackModal } from './components/WalkFeedbackModal';
 import { ApiClient } from './services/apiClient';
-import { RouteCandidate, ActiveJourney, HeatmapPoint } from './types';
+import { getSmartLocalDestination } from './services/locationUtils';
+import { RouteCandidate, ActiveJourney, HeatmapPoint, AppTab } from './types';
 import { AlertCircle, PlusCircle } from 'lucide-react';
 
 const MainAppContent: React.FC = () => {
   const { isElderlyMode } = useElderlyMode();
 
-  const [activeTab, setActiveTab] = useState<'home' | 'plan' | 'live' | 'heatmap' | 'contacts'>('plan');
+  const [activeTab, setActiveTab] = useState<AppTab>('plan');
   const [showHeatmap, setShowHeatmap] = useState(true);
+  const [isCalculatingRoutes, setIsCalculatingRoutes] = useState(false);
 
   // Family Contacts state
   const [familyModalOpen, setFamilyModalOpen] = useState(false);
@@ -35,10 +38,10 @@ const MainAppContent: React.FC = () => {
   // Heatmap points
   const [heatmapPoints, setHeatmapPoints] = useState<HeatmapPoint[]>([]);
 
-  // User real live GPS location
+  // User real live GPS location (Defaults to Barrackpore Station Hub Platform 1)
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number }>({
-    lat: 22.7630,
-    lng: 88.3640
+    lat: 22.76034,
+    lng: 88.37110
   });
   const [gpsAcquired, setGpsAcquired] = useState(false);
 
@@ -47,9 +50,28 @@ const MainAppContent: React.FC = () => {
   const [sosContactPhone, setSosContactPhone] = useState('');
   const [reportModalOpen, setReportModalOpen] = useState(false);
   const [reportPinLocation, setReportPinLocation] = useState<{ lat: number; lng: number }>({
-    lat: 22.7630,
-    lng: 88.3640
+    lat: 22.76034,
+    lng: 88.37110
   });
+  const [feedbackModalOpen, setFeedbackModalOpen] = useState(false);
+  const [lastCompletedJourney, setLastCompletedJourney] = useState<{ id: string; name: string } | null>(null);
+
+  // Offline SOS Queue automatic flusher
+  useEffect(() => {
+    ApiClient.flushOfflineQueue();
+    const handleOnline = () => {
+      console.log('[SAHELI] Connectivity restored — flushing offline SOS queue');
+      ApiClient.flushOfflineQueue();
+    };
+    window.addEventListener('online', handleOnline);
+    const interval = setInterval(() => {
+      ApiClient.flushOfflineQueue();
+    }, 20000);
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      clearInterval(interval);
+    };
+  }, []);
 
   // Fetch real-time live browser/device GPS location immediately with multi-provider IP fallback
   useEffect(() => {
@@ -68,15 +90,16 @@ const MainAppContent: React.FC = () => {
             setUserLocation(ipLoc);
             setReportPinLocation(ipLoc);
             setGpsAcquired(true);
-            handleCalculateRoutes(placeLabel, 'Barrackpore Railway Station', 25, ipLoc);
+            const smartDest = getSmartLocalDestination(ipLoc, placeLabel);
+            handleCalculateRoutes(placeLabel, smartDest.name, 25, ipLoc, smartDest.coords);
             return;
           }
         }
       } catch (_) {}
 
-      // 2. Try ip-api.com as secondary backup
+      // 2. Try ip-api.com as secondary backup (HTTPS to avoid mixed content on Vercel)
       try {
-        const res = await fetch('http://ip-api.com/json/');
+        const res = await fetch('https://ip-api.com/json/');
         if (res.ok) {
           const data = await res.json();
           if (data && data.lat && data.lon && active) {
@@ -86,7 +109,8 @@ const MainAppContent: React.FC = () => {
             setUserLocation(ipLoc);
             setReportPinLocation(ipLoc);
             setGpsAcquired(true);
-            handleCalculateRoutes(placeLabel, 'Barrackpore Railway Station', 25, ipLoc);
+            const smartDest = getSmartLocalDestination(ipLoc, placeLabel);
+            handleCalculateRoutes(placeLabel, smartDest.name, 25, ipLoc, smartDest.coords);
             return;
           }
         }
@@ -103,7 +127,8 @@ const MainAppContent: React.FC = () => {
             setUserLocation(ipLoc);
             setReportPinLocation(ipLoc);
             setGpsAcquired(true);
-            handleCalculateRoutes(placeLabel, 'Barrackpore Railway Station', 25, ipLoc);
+            const smartDest = getSmartLocalDestination(ipLoc, placeLabel);
+            handleCalculateRoutes(placeLabel, smartDest.name, 25, ipLoc, smartDest.coords);
             return;
           }
         }
@@ -119,7 +144,8 @@ const MainAppContent: React.FC = () => {
       setUserLocation(newLoc);
       setReportPinLocation(newLoc);
       setGpsAcquired(true);
-      handleCalculateRoutes('My Current Location', 'Barrackpore Railway Station', 25, newLoc);
+      const smartDest = getSmartLocalDestination(newLoc, 'My Current Location');
+      handleCalculateRoutes('My Current Location', smartDest.name, 25, newLoc, smartDest.coords);
     };
 
     if ('geolocation' in navigator) {
@@ -171,7 +197,8 @@ const MainAppContent: React.FC = () => {
   useEffect(() => {
     loadHeatmapData();
     if (!gpsAcquired) {
-      handleCalculateRoutes('My Current Location', 'Barrackpore Railway Station', 25, userLocation);
+      const smartDest = getSmartLocalDestination(userLocation);
+      handleCalculateRoutes('My Current Location', smartDest.name, 25, userLocation, smartDest.coords);
     }
   }, []);
 
@@ -180,33 +207,31 @@ const MainAppContent: React.FC = () => {
     setHeatmapPoints(pts);
   };
 
-  const handleCalculateRoutes = async (
+  const handleCalculateRoutes = useCallback(async (
     originName: string,
     destName: string,
     budget: number,
     originCoords?: { lat: number; lng: number },
     destCoords?: { lat: number; lng: number }
   ) => {
-    // Use pinpointed coordinates directly if available, otherwise resolve by name
     const origin = originCoords ? { ...originCoords, name: originName } : originName;
     const destination = destCoords ? { ...destCoords, name: destName } : destName;
-
-    const res = await ApiClient.fetchSafeRoutes(
-      origin,
-      destination,
-      budget
-    );
-    setCandidates(res.routes);
-    setDisclaimerNotice(res.summaryNotice);
-    if (res.routes.length > 0) {
-      const rec = res.routes.find(r => r.isRecommended) || res.routes[0];
-      setSelectedRouteId(rec.id);
+    setIsCalculatingRoutes(true);
+    try {
+      const res = await ApiClient.fetchSafeRoutes(origin, destination, budget);
+      setCandidates(res.routes);
+      setDisclaimerNotice(res.summaryNotice);
+      if (res.routes.length > 0) {
+        const rec = res.routes.find(r => r.isRecommended) || res.routes[0];
+        setSelectedRouteId(rec.id);
+      }
+    } finally {
+      setIsCalculatingRoutes(false);
     }
-  };
+  }, []);
 
-  const handleStartJourney = async (route: RouteCandidate) => {
+  const handleStartJourney = useCallback(async (route: RouteCandidate) => {
     const startRes = await ApiClient.startJourney('user_india_1', route);
-
     const newJourney: ActiveJourney = {
       id: startRes.journeyId,
       routeId: route.id,
@@ -220,16 +245,13 @@ const MainAppContent: React.FC = () => {
       consecutiveOffRoutePings: 0,
       contactAlertLogs: []
     };
-
     setActiveJourney(newJourney);
     setActiveTab('live');
-  };
+  }, []);
 
-  const handleSendPing = async (lat: number, lng: number) => {
+  const handleSendPing = useCallback(async (lat: number, lng: number) => {
     if (!activeJourney) return;
-
     const pingRes = await ApiClient.sendPing(activeJourney.id, lat, lng);
-
     setActiveJourney(prev => {
       if (!prev) return null;
       return {
@@ -239,7 +261,7 @@ const MainAppContent: React.FC = () => {
         consecutiveOffRoutePings: pingRes.onRoute ? 0 : prev.consecutiveOffRoutePings + 1
       };
     });
-  };
+  }, [activeJourney]);
 
   const handleTriggerSOS = async () => {
     const loc = activeJourney
@@ -275,29 +297,34 @@ const MainAppContent: React.FC = () => {
       console.warn('Auto launch WhatsApp error:', e);
     }
 
+    const journeyId = activeJourney ? activeJourney.id : `jny_adhoc_${Date.now()}`;
+    ApiClient.triggerSOS(journeyId, loc, primaryPhone || undefined);
     if (activeJourney) {
-      ApiClient.triggerSOS(activeJourney.id, loc, primaryPhone || undefined);
       setActiveJourney(prev => prev ? { ...prev, status: 'sos_triggered' } : null);
     }
 
     setSosOpen(true);
   };
 
-  const handleCompleteJourney = () => {
+  const handleCompleteJourney = useCallback(() => {
+    if (activeJourney) {
+      setLastCompletedJourney({ id: activeJourney.id, name: activeJourney.routeName });
+      setFeedbackModalOpen(true);
+    }
     setActiveJourney(null);
     setActiveTab('plan');
-  };
+  }, [activeJourney]);
 
-  const handleMapClick = (lat: number, lng: number) => {
+  const handleMapClick = useCallback((lat: number, lng: number) => {
     setReportPinLocation({ lat, lng });
     setReportModalOpen(true);
-  };
+  }, []);
 
-  const handleSubmitReport = async (data: { category: any; description: string; lat: number; lng: number }) => {
+  const handleSubmitReport = useCallback(async (data: { category: any; description: string; lat: number; lng: number }) => {
     const result = await ApiClient.submitIncidentReport(data);
     loadHeatmapData();
     return result;
-  };
+  }, []);
 
   return (
     <div className="min-h-screen bg-rose-50/50 text-slate-900 font-sans">
@@ -364,6 +391,7 @@ const MainAppContent: React.FC = () => {
                 isElderlyMode={false}
                 disclaimerNotice={disclaimerNotice}
                 userLocation={userLocation}
+                isLoading={isCalculatingRoutes}
               />
             )}
 
@@ -425,6 +453,13 @@ const MainAppContent: React.FC = () => {
       <FamilyContactsModal
         isOpen={familyModalOpen}
         onClose={() => setFamilyModalOpen(false)}
+      />
+
+      <WalkFeedbackModal
+        isOpen={feedbackModalOpen}
+        onClose={() => setFeedbackModalOpen(false)}
+        journeyId={lastCompletedJourney?.id || 'jny_completed'}
+        routeName={lastCompletedJourney?.name || 'Kolkata Safe Walk'}
       />
 
       {/* Native Mobile App Dock Bottom Navigation Bar */}

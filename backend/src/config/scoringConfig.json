@@ -20,5 +20,30 @@
     "deviation_threshold_meters": 150,
     "deviation_consecutive_pings": 2,
     "eta_buffer_minutes": 10
+  },
+  "launch_regions": {
+    "kolkata": {
+      "name": "Kolkata Metropolitan Area",
+      "boundary": {
+        "min_lat": 22.45,
+        "max_lat": 22.65,
+        "min_lng": 88.25,
+        "max_lng": 88.48
+      },
+      "gates": {
+        "routing_graph_validated": true,
+        "osm_lighting_validated": true,
+        "crime_data_seeded": false,
+        "dlt_sms_registered": false,
+        "marg_routing_validated": false
+      },
+      "min_osm_coverage_ratio": 0.60,
+      "way_matching_radius_meters": 25.0
+    }
+  },
+  "marg_provider": {
+    "base_url": "https://marg-mapping-engine.onrender.com",
+    "timeout_ms": 4000,
+    "shadow_mode_enabled": true
   }
 }

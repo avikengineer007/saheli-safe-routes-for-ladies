@@ -305,11 +305,91 @@ export class ApiClient {
     return { onRoute: true, deviationAlertTriggered: false };
   }
 
+  // --- Offline Retry Queue Implementation (Step 9) ---
+  private static SOS_QUEUE_KEY = 'saheli_offline_sos_queue';
+  private static isFlushingQueue = false;
+
+  public static getQueuedSOSCount(): number {
+    try {
+      const queue = JSON.parse(localStorage.getItem(this.SOS_QUEUE_KEY) || '[]');
+      return Array.isArray(queue) ? queue.length : 0;
+    } catch {
+      return 0;
+    }
+  }
+
+  private static enqueueSOS(payload: { journeyId: string; currentLocation: { lat: number; lng: number }; contactPhone?: string }): void {
+    try {
+      const queue = JSON.parse(localStorage.getItem(this.SOS_QUEUE_KEY) || '[]');
+      queue.push({
+        ...payload,
+        id: `sos_q_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+        queuedAt: new Date().toISOString(),
+        retryCount: 0
+      });
+      localStorage.setItem(this.SOS_QUEUE_KEY, JSON.stringify(queue));
+      console.log(`[SAHELI SOS Queue] Queued unsent SOS alert for offline retry (total pending: ${queue.length})`);
+    } catch (e) {
+      console.warn('[SAHELI SOS Queue] Failed to write to localStorage:', e);
+    }
+  }
+
+  public static async flushOfflineQueue(): Promise<{ sent: number; remaining: number }> {
+    if (this.isFlushingQueue) return { sent: 0, remaining: this.getQueuedSOSCount() };
+    this.isFlushingQueue = true;
+
+    try {
+      const queue: Array<{ id: string; journeyId: string; currentLocation: { lat: number; lng: number }; contactPhone?: string; retryCount: number }> =
+        JSON.parse(localStorage.getItem(this.SOS_QUEUE_KEY) || '[]');
+
+      if (!queue.length) {
+        this.isFlushingQueue = false;
+        return { sent: 0, remaining: 0 };
+      }
+
+      console.log(`[SAHELI SOS Queue] Network available — flushing ${queue.length} pending SOS alerts...`);
+      const remaining: typeof queue = [];
+      let sentCount = 0;
+
+      for (const item of queue) {
+        try {
+          const res = await fetch(`${API_BASE_URL}/journey/sos`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              journeyId: item.journeyId,
+              currentLocation: item.currentLocation,
+              contactPhone: item.contactPhone
+            })
+          });
+
+          if (res.ok) {
+            sentCount++;
+            console.log(`[SAHELI SOS Queue] Successfully dispatched queued SOS ${item.id}`);
+          } else {
+            item.retryCount = (item.retryCount || 0) + 1;
+            if (item.retryCount < 5) remaining.push(item);
+          }
+        } catch {
+          item.retryCount = (item.retryCount || 0) + 1;
+          if (item.retryCount < 5) remaining.push(item);
+        }
+      }
+
+      localStorage.setItem(this.SOS_QUEUE_KEY, JSON.stringify(remaining));
+      this.isFlushingQueue = false;
+      return { sent: sentCount, remaining: remaining.length };
+    } catch {
+      this.isFlushingQueue = false;
+      return { sent: 0, remaining: 0 };
+    }
+  }
+
   public static async triggerSOS(
     journeyId: string,
     currentLocation: { lat: number; lng: number },
     contactPhone?: string
-  ): Promise<{ emergencyCallNumber: string }> {
+  ): Promise<{ emergencyCallNumber: string; queuedForRetry?: boolean }> {
     try {
       const res = await fetch(`${API_BASE_URL}/journey/sos`, {
         method: 'POST',
@@ -317,11 +397,49 @@ export class ApiClient {
         body: JSON.stringify({ journeyId, currentLocation, contactPhone })
       });
       if (res.ok) {
+        const data = await res.json();
+        // Also flush any previously queued items
+        this.flushOfflineQueue().catch(() => {});
+        return data;
+      }
+    } catch (err) {
+      console.warn('[SAHELI SOS] Network error or server offline. Enqueueing SOS for retry...');
+    }
+
+    // Network offline / timeout: Queue for retry
+    this.enqueueSOS({ journeyId, currentLocation, contactPhone });
+    return { emergencyCallNumber: '112', queuedForRetry: true };
+  }
+
+  public static async submitWalkFeedback(feedback: {
+    journeyId: string;
+    safetyRating: number;
+    lightingAdequate: string;
+    detourWorthIt: boolean;
+    notes?: string;
+  }): Promise<{ success: boolean; message: string }> {
+    try {
+      const res = await fetch(`${API_BASE_URL}/journey/feedback`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(feedback)
+      });
+      if (res.ok) {
         return await res.json();
       }
-    } catch (err) {}
+    } catch (_) {}
 
-    return { emergencyCallNumber: '112' };
+    // Save locally
+    try {
+      const saved = JSON.parse(localStorage.getItem('saheli_walk_feedbacks') || '[]');
+      saved.push({ ...feedback, recordedAt: new Date().toISOString() });
+      localStorage.setItem('saheli_walk_feedbacks', JSON.stringify(saved));
+    } catch (_) {}
+
+    return {
+      success: true,
+      message: 'Walk feedback saved locally to tune Kolkata safety scores.'
+    };
   }
 
   private static customUserIncidents: HeatmapPoint[] = [];
@@ -342,14 +460,20 @@ export class ApiClient {
     this.customUserIncidents.unshift(newIncident);
 
     try {
+      const token = typeof window !== 'undefined' ? localStorage.getItem('saheli_auth_token') : null;
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
       const res = await fetch(`${API_BASE_URL}/incidents/report`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({
-          userId: 'user_panindia_1',
-          userTrustScore: 0.85,
-          userAccountAgeDays: 14,
-          ...input
+          lat: input.lat,
+          lng: input.lng,
+          category: input.category,
+          description: input.description
         })
       });
       if (res.ok) {
@@ -358,8 +482,8 @@ export class ApiClient {
     } catch (err) {}
 
     return {
-      message: 'Report submitted and updated on the Pan-India safety map.',
-      status: 'verified'
+      message: 'Report submitted. Pending community corroboration.',
+      status: 'pending'
     };
   }
 
@@ -390,10 +514,17 @@ export class ApiClient {
       { lat: 22.5480, lng: 88.3500, intensity: 0.88, category: 'harassment', radiusMeters: 150, ageDays: 2 },
       { lat: 22.5620, lng: 88.3650, intensity: 0.72, category: 'poor_lighting', radiusMeters: 10, ageDays: 5 },
 
-      // Delhi NCR Hazards
-      { lat: 28.6300, lng: 77.2180, intensity: 0.80, category: 'poor_lighting', radiusMeters: 10, ageDays: 1 },
+      // Whole Delhi (NCT & NCR) Community Safety Hazards
+      { lat: 28.6300, lng: 77.2180, intensity: 0.85, category: 'poor_lighting', radiusMeters: 10, ageDays: 1 },
       { lat: 28.6180, lng: 77.2250, intensity: 0.92, category: 'harassment', radiusMeters: 150, ageDays: 2 },
-      { lat: 28.5480, lng: 77.1930, intensity: 0.85, category: 'unsafe_area', radiusMeters: 100, ageDays: 3 },
+      { lat: 28.5480, lng: 77.1930, intensity: 0.88, category: 'unsafe_area', radiusMeters: 100, ageDays: 3 },
+      { lat: 28.6850, lng: 77.2120, intensity: 0.85, category: 'poor_lighting', radiusMeters: 10, ageDays: 2 },
+      { lat: 28.6650, lng: 77.2270, intensity: 0.90, category: 'unsafe_area', radiusMeters: 100, ageDays: 1 },
+      { lat: 28.5760, lng: 77.1970, intensity: 0.82, category: 'poor_lighting', radiusMeters: 10, ageDays: 2 },
+      { lat: 28.5510, lng: 77.0600, intensity: 0.88, category: 'unsafe_area', radiusMeters: 100, ageDays: 4 },
+      { lat: 28.6440, lng: 77.1900, intensity: 0.78, category: 'poor_lighting', radiusMeters: 10, ageDays: 3 },
+      { lat: 28.6560, lng: 77.2300, intensity: 0.86, category: 'harassment', radiusMeters: 150, ageDays: 2 },
+      { lat: 28.5280, lng: 77.2180, intensity: 0.75, category: 'poor_lighting', radiusMeters: 10, ageDays: 5 },
 
       // Mumbai, MH Hazards
       { lat: 18.9410, lng: 72.8250, intensity: 0.95, category: 'harassment', radiusMeters: 150, ageDays: 2 },
@@ -419,20 +550,25 @@ export class ApiClient {
     const destLabel = typeof dest === 'string' ? dest : (dest.name || 'Destination');
 
     const LANDMARKS: Record<string, { lat: number; lng: number }> = {
-      // Barrackpore & Local Bengal Restaurants, Stores & Places
-      'dada boudi hotel': { lat: 22.7628, lng: 88.3642 },
-      'dada boudi restaurant': { lat: 22.7625, lng: 88.3638 },
-      'dada boudi biryani': { lat: 22.7628, lng: 88.3642 },
-      'reliance smart point': { lat: 22.7602, lng: 88.3615 },
+      // Barrackpore & Local Bengal Railway Stations, Restaurants & Hubs (Exact OSM Ground-Truth)
+      'dada boudi hotel': { lat: 22.7607, lng: 88.3705 },
+      'dada boudi restaurant': { lat: 22.7607, lng: 88.3705 },
+      'dada boudi biryani': { lat: 22.7607, lng: 88.3705 },
+      'reliance smart point': { lat: 22.7610, lng: 88.3665 },
       'audreys korean cafe': { lat: 22.7588, lng: 88.3651 },
-      'barrackpore railway station': { lat: 22.7630, lng: 88.3640 },
-      'barrackpore station': { lat: 22.7630, lng: 88.3640 },
-      'barrackpore railway station (bp)': { lat: 22.7630, lng: 88.3640 },
-      'barrackpore r.s.': { lat: 22.7630, lng: 88.3640 },
-      'barrackpore train station': { lat: 22.7630, lng: 88.3640 },
+      'barrackpore railway station': { lat: 22.76034, lng: 88.37110 },
+      'barrackpore station': { lat: 22.76034, lng: 88.37110 },
+      'barrackpore railway station (bp)': { lat: 22.76034, lng: 88.37110 },
+      'barrackpore r.s.': { lat: 22.76034, lng: 88.37110 },
+      'barrackpore train station': { lat: 22.76034, lng: 88.37110 },
       'barrackpore cantonment': { lat: 22.7610, lng: 88.3580 },
-      'mangal pandey park': { lat: 22.7570, lng: 88.3530 },
-      'ishapore railway station': { lat: 22.7820, lng: 88.3700 },
+      'mangal pandey park': { lat: 22.7570, lng: 88.3490 },
+      'ichhapur railway station': { lat: 22.79983, lng: 88.37391 },
+      'ichhapur station': { lat: 22.79983, lng: 88.37391 },
+      'ishapore railway station': { lat: 22.79983, lng: 88.37391 },
+      'palta railway station': { lat: 22.78263, lng: 88.37027 },
+      'titagarh railway station': { lat: 22.74113, lng: 88.37458 },
+      'shyamnagar railway station': { lat: 22.82852, lng: 88.38019 },
       'ichapur water tank': { lat: 22.7805, lng: 88.3720 },
       'nawabganj barrackpore': { lat: 22.7750, lng: 88.3610 },
 
@@ -456,13 +592,57 @@ export class ApiClient {
       'eden gardens': { lat: 22.5646, lng: 88.3433 },
       'salt lake sector v': { lat: 22.5731, lng: 88.4337 },
 
-      // Pan-India Iconic Restaurants, Cafes & Places
+      // Whole Delhi (NCT & NCR) Landmark Coverage
+      'connaught place': { lat: 28.6315, lng: 77.2167 },
+      'connaught place delhi': { lat: 28.6315, lng: 77.2167 },
+      'cp delhi': { lat: 28.6315, lng: 77.2167 },
+      'rajiv chowk': { lat: 28.6328, lng: 77.2195 },
+      'rajiv chowk metro': { lat: 28.6328, lng: 77.2195 },
+      'india gate': { lat: 28.6129, lng: 77.2295 },
+      'india gate new delhi': { lat: 28.6129, lng: 77.2295 },
+      'janpath': { lat: 28.6260, lng: 77.2188 },
+      'janpath market': { lat: 28.6260, lng: 77.2188 },
+      'indian coffee house cp': { lat: 28.6318, lng: 77.2185 },
+      'new delhi railway station': { lat: 28.6430, lng: 77.2194 },
+      'ndls': { lat: 28.6430, lng: 77.2194 },
+      'old delhi railway station': { lat: 28.6619, lng: 77.2307 },
+      'kashmere gate': { lat: 28.6675, lng: 77.2285 },
+      'kashmere gate isbt': { lat: 28.6675, lng: 77.2285 },
+      'anand vihar isbt': { lat: 28.6469, lng: 77.3160 },
+      'nizamuddin railway station': { lat: 28.5892, lng: 77.2530 },
+      'du north campus': { lat: 28.6890, lng: 77.2100 },
+      'vishwavidyalaya metro': { lat: 28.6946, lng: 77.2140 },
+      'kamla nagar': { lat: 28.6800, lng: 77.2025 },
+      'miranda house': { lat: 28.6912, lng: 77.2108 },
+      'hauz khas village': { lat: 28.5494, lng: 77.1960 },
+      'hauz khas metro': { lat: 28.5432, lng: 77.2065 },
+      'saket select citywalk': { lat: 28.5284, lng: 77.2193 },
+      'saket metro': { lat: 28.5204, lng: 77.2015 },
+      'sarojini nagar': { lat: 28.5778, lng: 77.1983 },
+      'sarojini nagar market': { lat: 28.5778, lng: 77.1983 },
+      'ina metro': { lat: 28.5746, lng: 77.2098 },
+      'dilli haat': { lat: 28.5746, lng: 77.2098 },
+      'lajpat nagar central market': { lat: 28.5694, lng: 77.2435 },
+      'karol bagh': { lat: 28.6444, lng: 77.1906 },
+      'chandni chowk': { lat: 28.6562, lng: 77.2310 },
+      'red fort': { lat: 28.6562, lng: 77.2410 },
       'karim restaurant jama masjid': { lat: 28.6508, lng: 77.2335 },
       'bukhara itc maurya': { lat: 28.5975, lng: 77.1738 },
-      'indian coffee house cp': { lat: 28.6318, lng: 77.2185 },
-      'connaught place delhi': { lat: 28.6315, lng: 77.2167 },
-      'india gate new delhi': { lat: 28.6129, lng: 77.2295 },
-      'hauz khas village': { lat: 28.5494, lng: 77.1960 },
+      'dwarka sector 21': { lat: 28.5522, lng: 77.0583 },
+      'dwarka sector 10': { lat: 28.5815, lng: 77.0585 },
+      'vegas mall dwarka': { lat: 28.5815, lng: 77.0585 },
+      'rohini sector 18': { lat: 28.7420, lng: 77.1350 },
+      'janakpuri district centre': { lat: 28.6290, lng: 77.0815 },
+      'vasant kunj': { lat: 28.5402, lng: 77.1558 },
+      'ambience mall vasant kunj': { lat: 28.5402, lng: 77.1558 },
+      'iit delhi': { lat: 28.5450, lng: 77.1926 },
+      'jnu': { lat: 28.5398, lng: 77.1664 },
+      'jamia millia islamia': { lat: 28.5616, lng: 77.2802 },
+      'laxmi nagar': { lat: 28.6307, lng: 77.2774 },
+      'igi airport': { lat: 28.5562, lng: 77.1000 },
+      'delhi airport t3': { lat: 28.5562, lng: 77.1000 },
+      'noida sector 18': { lat: 28.5708, lng: 77.3261 },
+      'cyber city gurugram': { lat: 28.4950, lng: 77.0890 },
       'leopold cafe colaba': { lat: 18.9230, lng: 72.8318 },
       'britannia and co': { lat: 18.9372, lng: 72.8378 },
       'bademiya colaba': { lat: 18.9225, lng: 72.8322 },
@@ -551,7 +731,7 @@ export class ApiClient {
       // 4. Regional fallback if no anchor available
       const lower = name.toLowerCase();
       if (lower.includes('barrackpore') || lower.includes('ishapore') || lower.includes('nawabganj')) {
-        return { lat: 22.7630, lng: 88.3640 };
+        return { lat: 22.76034, lng: 88.37110 };
       }
       if (lower.includes('sealdah') || lower.includes('kolkata') || lower.includes('calcutta') || lower.includes('howrah')) {
         return { lat: 22.5670, lng: 88.3712 };
@@ -560,7 +740,7 @@ export class ApiClient {
       if (lower.includes('bengaluru') || lower.includes('bangalore')) return { lat: 12.9756, lng: 77.6066 };
       if (lower.includes('delhi')) return { lat: 28.6315, lng: 77.2167 };
 
-      return { lat: 22.7630, lng: 88.3640 };
+      return { lat: 22.76034, lng: 88.37110 };
     };
 
     // Smart Order: Resolve destination first ONLY if origin is generic string with NO lat/lng coords
@@ -582,6 +762,17 @@ export class ApiClient {
     } else {
       origPt = await resolveSingleLoc(origin);
       destPt = await resolveSingleLoc(dest, origPt);
+    }
+
+    // Safety Safeguard: Pedestrian routes must be local (under 35km). If user's detected GPS origin
+    // and destination are in different cities (> 35km apart), adapt destination to user's local area.
+    const crossCityDist = this.calculateHaversineDistance(origPt.lat, origPt.lng, destPt.lat, destPt.lng);
+    if (crossCityDist > 35000 && (typeof origin === 'object' || (typeof origin === 'string' && origin.toLowerCase().includes('current')))) {
+      console.warn(`[SAHELI] Cross-city distance detected (${Math.round(crossCityDist / 1000)}km). Re-anchoring destination to local commercial safe hub.`);
+      destPt = {
+        lat: origPt.lat + 0.0090,
+        lng: origPt.lng + 0.0070
+      };
     }
 
     // Try OpenStreetMap OSRM Walking Directions in browser

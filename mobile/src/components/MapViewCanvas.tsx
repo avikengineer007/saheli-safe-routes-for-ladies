@@ -46,11 +46,11 @@ export const MapViewCanvas: React.FC<MapViewCanvasProps> = ({
         zoomControl: true
       });
 
-      // CartoDB Dark Matter OpenStreetMap Tiles (Sleek dark-mode vector map aesthetic)
-      Leaflet.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
-        subdomains: 'abcd',
-        maxZoom: 19
+      // Clean OpenStreetMap Tiles with Sleek Dark Night Mode CSS Filter (100% Free, No Watermarks, No API Keys)
+      Leaflet.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors',
+        maxZoom: 19,
+        className: 'saheli-map-tiles'
       }).addTo(map);
 
       layersGroupRef.current = Leaflet.layerGroup().addTo(map);
@@ -140,8 +140,17 @@ export const MapViewCanvas: React.FC<MapViewCanvasProps> = ({
           iconAnchor: [14, 14]
         });
 
-        layersGroupRef.current.addLayer(Leaflet.marker(startPt, { icon: startIcon }));
-        layersGroupRef.current.addLayer(Leaflet.marker(endPt, { icon: endIcon }));
+        const nameParts = candidate.name.split(' → ');
+        const origName = nameParts[0] || 'Origin (A)';
+        const destName = (nameParts[1] || 'Destination (B)').split(' (')[0];
+
+        const startMarker = Leaflet.marker(startPt, { icon: startIcon });
+        startMarker.bindTooltip(`📍 Start (A): ${origName}`, { permanent: false, direction: 'top' });
+        layersGroupRef.current.addLayer(startMarker);
+
+        const endMarker = Leaflet.marker(endPt, { icon: endIcon });
+        endMarker.bindTooltip(`🎯 Destination (B): ${destName}`, { permanent: false, direction: 'top' });
+        layersGroupRef.current.addLayer(endMarker);
       }
 
       // Draw unlit segment markers
@@ -214,9 +223,12 @@ export const MapViewCanvas: React.FC<MapViewCanvasProps> = ({
       layersGroupRef.current.addLayer(Leaflet.marker([targetPos.lat, targetPos.lng], { icon: userIcon }));
     }
 
-    // Auto fit bounds
+    // Auto fit bounds to encompass complete route from origin A to destination B
     if (bounds.length > 0) {
-      map.fitBounds(bounds, { padding: [40, 40] });
+      try {
+        map.invalidateSize();
+        map.fitBounds(bounds, { padding: [50, 50], maxZoom: 16 });
+      } catch (_) {}
     }
   }, [candidates, selectedRouteId, heatmapPoints, showHeatmap, userLocation, activeJourneyLocation, isDeviated, onSelectRoute]);
 

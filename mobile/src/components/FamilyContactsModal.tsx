@@ -164,8 +164,8 @@ export const FamilyContactsModal: React.FC<FamilyContactsModalProps> = ({
                     {!contact.isPrimary && (
                       <button
                         onClick={() => handleSetPrimary(contact.id)}
+                        aria-label={`Make ${contact.name} the primary emergency contact`}
                         className="px-2.5 py-1.5 rounded-xl bg-rose-100 hover:bg-rose-200 text-red-700 text-[11px] font-bold transition-colors"
-                        title="Make Primary Contact"
                       >
                         Set Primary
                       </button>
@@ -173,8 +173,8 @@ export const FamilyContactsModal: React.FC<FamilyContactsModalProps> = ({
 
                     <button
                       onClick={() => handleDeleteContact(contact.id)}
+                      aria-label={`Remove ${contact.name} from family contacts`}
                       className="p-2 rounded-xl text-slate-400 hover:text-red-600 hover:bg-rose-50 transition-colors"
-                      title="Remove Contact"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
@@ -240,9 +240,30 @@ export const FamilyContactsModal: React.FC<FamilyContactsModalProps> = ({
                 onChange={e => setNewPhone(e.target.value.replace(/[^0-9]/g, ''))}
                 placeholder="Enter 10-digit phone number"
                 required
-                className="w-full pl-12 pr-4 py-2.5 rounded-xl border border-rose-200 bg-white text-slate-900 font-bold text-xs outline-none focus:border-red-600 transition-all shadow-sm"
+                aria-label="Mobile number, 10 digits"
+                className={`w-full pl-12 pr-16 py-2.5 rounded-xl border bg-white text-slate-900 font-bold text-xs outline-none transition-all shadow-sm ${
+                  newPhone.length === 0
+                    ? 'border-rose-200 focus:border-red-600'
+                    : newPhone.length === 10
+                    ? 'border-emerald-400 focus:border-emerald-500 ring-1 ring-emerald-300'
+                    : 'border-amber-400 focus:border-amber-500'
+                }`}
               />
+              {/* Digit counter */}
+              <span className={`absolute right-3 top-3 text-[11px] font-black tabular-nums ${
+                newPhone.length === 10 ? 'text-emerald-600' : newPhone.length > 0 ? 'text-amber-600' : 'text-slate-300'
+              }`}>
+                {newPhone.length}/10
+              </span>
             </div>
+            {newPhone.length > 0 && newPhone.length < 10 && (
+              <p className="text-[11px] text-amber-600 font-semibold mt-1">
+                {10 - newPhone.length} more digit{10 - newPhone.length !== 1 ? 's' : ''} needed
+              </p>
+            )}
+            {newPhone.length === 10 && (
+              <p className="text-[11px] text-emerald-600 font-semibold mt-1">✓ Valid 10-digit number</p>
+            )}
           </div>
 
           <div className="flex items-center space-x-2 text-xs font-medium text-slate-700">

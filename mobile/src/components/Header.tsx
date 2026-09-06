@@ -1,12 +1,13 @@
 import React from 'react';
 import { ShieldCheck, HeartHandshake, Eye, Sparkles, MapPin } from 'lucide-react';
 import { useElderlyMode } from '../context/ElderlyModeContext';
+import { AppTab } from '../types';
 
 interface HeaderProps {
   showHeatmap: boolean;
   onToggleHeatmap: () => void;
-  activeTab: 'home' | 'plan' | 'live' | 'heatmap' | 'contacts';
-  setActiveTab: (tab: 'home' | 'plan' | 'live' | 'heatmap' | 'contacts') => void;
+  activeTab: AppTab;
+  setActiveTab: (tab: AppTab) => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -91,6 +92,8 @@ export const Header: React.FC<HeaderProps> = ({
           {/* Heatmap Toggle */}
           <button
             onClick={onToggleHeatmap}
+            aria-label={showHeatmap ? 'Hide safety heatmap' : 'Show safety heatmap'}
+            aria-pressed={showHeatmap}
             className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border transition-colors ${
               showHeatmap
                 ? 'bg-rose-100 border-rose-300 text-rose-800'
@@ -105,6 +108,8 @@ export const Header: React.FC<HeaderProps> = ({
           <div className="flex items-center bg-white border border-rose-200 rounded-xl p-1 shadow-sm">
             <button
               onClick={() => setAgeGroup('adult')}
+              aria-label="Standard mode"
+              aria-pressed={!isElderlyMode}
               className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
                 !isElderlyMode
                   ? 'bg-rose-500 text-white shadow-sm'
@@ -115,6 +120,8 @@ export const Header: React.FC<HeaderProps> = ({
             </button>
             <button
               onClick={() => setAgeGroup('elderly')}
+              aria-label="Elderly / senior companion mode"
+              aria-pressed={isElderlyMode}
               className={`flex items-center space-x-1 px-3 py-1 rounded-lg text-xs font-bold transition-all ${
                 isElderlyMode
                   ? 'bg-red-600 text-white shadow-sm'

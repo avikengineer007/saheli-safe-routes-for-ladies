@@ -1,3 +1,5 @@
+export type AppTab = 'home' | 'plan' | 'live' | 'heatmap' | 'contacts';
+
 export type AgeGroup = 'under18' | 'adult' | 'elderly';
 
 export interface RoutePoint {
@@ -21,6 +23,9 @@ export interface RouteCandidate {
     score: number;
     reasons: string[];
   }>;
+  dataConfidence?: 'verified_dense' | 'standard' | 'cold_start';
+  routingProvider?: 'marg' | 'google' | 'osrm_fallback';
+  modeWarning?: string;
 }
 
 export interface ActiveJourney {

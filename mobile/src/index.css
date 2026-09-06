@@ -1,5 +1,6 @@
-@import "https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css";
+/* SAHELI — Core Styles & Custom Animations */
 
+/* Google Fonts: Outfit */
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap');
 
 body {
@@ -8,4 +9,82 @@ body {
   color: #0f172a;
   margin: 0;
   padding: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Thin elegant scrollbar */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #fca5a5; border-radius: 10px; }
+::-webkit-scrollbar-thumb:hover { background: #f87171; }
+
+/* ─── Custom Animations ──────────────────────────────────── */
+
+@keyframes fadeSlideUp {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.94); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes shimmer {
+  0%   { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+
+@keyframes ringPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(239,68,68,0.5); }
+  50%       { box-shadow: 0 0 0 16px rgba(239,68,68,0); }
+}
+
+@keyframes countdownShrink {
+  from { stroke-dashoffset: 0; }
+  to   { stroke-dashoffset: 100; }
+}
+
+/* ─── Animation Utility Classes ─────────────────────────── */
+
+.animate-fade-slide-up {
+  animation: fadeSlideUp 0.5s ease-out both;
+}
+.animate-fade-slide-up-delay-1 { animation: fadeSlideUp 0.5s ease-out 0.1s both; }
+.animate-fade-slide-up-delay-2 { animation: fadeSlideUp 0.5s ease-out 0.2s both; }
+.animate-fade-slide-up-delay-3 { animation: fadeSlideUp 0.5s ease-out 0.3s both; }
+.animate-fade-slide-up-delay-4 { animation: fadeSlideUp 0.5s ease-out 0.4s both; }
+
+.animate-scale-in {
+  animation: scaleIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+.animate-shimmer {
+  background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 50%, #f3f4f6 75%);
+  background-size: 800px 100%;
+  animation: shimmer 1.4s infinite linear;
+}
+
+.animate-ring-pulse {
+  animation: ringPulse 1.2s ease-in-out infinite;
+}
+
+/* ─── Skeleton Loading Placeholder ──────────────────────── */
+
+.skeleton-box {
+  background: linear-gradient(90deg, #fce7f3 25%, #fbcfe8 50%, #fce7f3 75%);
+  background-size: 800px 100%;
+  animation: shimmer 1.4s infinite linear;
+  border-radius: 16px;
+}
+
+/* ─── Sleek Dark Map Tiles (OpenStreetMap with Zero Watermarks) ─── */
+.leaflet-container {
+  background-color: #0b1120 !important;
+}
+
+/* High-contrast dark night palette: Charcoal land, visible streets, vibrant markers */
+.saheli-map-tiles {
+  filter: brightness(0.62) invert(1) contrast(3) hue-rotate(200deg) saturate(0.35) brightness(0.72) !important;
 }

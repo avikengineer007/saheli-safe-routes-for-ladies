@@ -38,7 +38,11 @@ const POPULAR_INDIA_PLACES: PlaceSuggestion[] = [
   { id: 'pat_airport', label: 'Jayprakash Narayan Airport (PAT)', sublabel: '✈️ AIRPORT • Patna, Bihar', lat: 25.5913, lng: 85.0880 },
 
   // Major Indian Railway Stations (Indian Railways Open Infrastructure Data)
-  { id: 'barrackpore_stn', label: 'Barrackpore Railway Station (BP)', sublabel: '🚆 RAILWAY STATION • Barrackpore, West Bengal', lat: 22.7630, lng: 88.3640 },
+  { id: 'barrackpore_stn', label: 'Barrackpore Railway Station (BP)', sublabel: '🚆 RAILWAY STATION • Barrackpore, West Bengal', lat: 22.76034, lng: 88.37110 },
+  { id: 'ichhapur_stn', label: 'Ichhapur Railway Station (IP)', sublabel: '🚆 RAILWAY STATION • Ichhapur, West Bengal', lat: 22.79983, lng: 88.37391 },
+  { id: 'palta_stn', label: 'Palta Railway Station (PTF)', sublabel: '🚆 RAILWAY STATION • Palta, West Bengal', lat: 22.78263, lng: 88.37027 },
+  { id: 'titagarh_stn', label: 'Titagarh Railway Station (TGH)', sublabel: '🚆 RAILWAY STATION • Titagarh, West Bengal', lat: 22.74113, lng: 88.37458 },
+  { id: 'shyamnagar_stn', label: 'Shyamnagar Railway Station (SNR)', sublabel: '🚆 RAILWAY STATION • Shyamnagar, West Bengal', lat: 22.82852, lng: 88.38019 },
   { id: 'sealdah_stn', label: 'Sealdah Railway Station (SDAH)', sublabel: '🚆 RAILWAY STATION • Kolkata, West Bengal', lat: 22.5670, lng: 88.3712 },
   { id: 'howrah_stn', label: 'Howrah Junction Station (HWH)', sublabel: '🚆 RAILWAY STATION • Howrah, West Bengal', lat: 22.5839, lng: 88.3430 },
   { id: 'ndls_stn', label: 'New Delhi Railway Station (NDLS)', sublabel: '🚆 RAILWAY STATION • New Delhi, Delhi', lat: 28.6430, lng: 77.2194 },
@@ -50,16 +54,35 @@ const POPULAR_INDIA_PLACES: PlaceSuggestion[] = [
   { id: 'pnbe_stn', label: 'Patna Junction Station (PNBE)', sublabel: '🚆 RAILWAY STATION • Patna, Bihar', lat: 25.6020, lng: 85.1376 },
 
   // Barrackpore & Local Places
-  { id: 'dada_boudi_hotel', label: 'Dada Boudi Hotel', sublabel: '🍽️ RESTAURANT • Barrackpore, West Bengal', lat: 22.7628, lng: 88.3642 },
-  { id: 'dada_boudi_restaurant', label: 'Dada Boudi Restaurant', sublabel: '🍽️ RESTAURANT • Barrackpore, West Bengal', lat: 22.7625, lng: 88.3638 },
-  { id: 'reliance_smart_point', label: 'Reliance Smart Point', sublabel: 'Barrackpore, West Bengal', lat: 22.7602, lng: 88.3615 },
+  { id: 'dada_boudi_hotel', label: 'Dada Boudi Hotel', sublabel: '🍽️ RESTAURANT (Platform 1) • Barrackpore, West Bengal', lat: 22.7607, lng: 88.3705 },
+  { id: 'dada_boudi_restaurant', label: 'Dada Boudi Restaurant', sublabel: '🍽️ RESTAURANT (Station Road) • Barrackpore, West Bengal', lat: 22.7607, lng: 88.3705 },
+  { id: 'reliance_smart_point', label: 'Reliance Smart Point', sublabel: 'Barrackpore, West Bengal', lat: 22.7610, lng: 88.3665 },
   { id: 'audreys_korean_cafe', label: 'Audrey\'s Korean Cafe', sublabel: '🍽️ CAFE • Barrackpore, West Bengal', lat: 22.7588, lng: 88.3651 },
-  { id: 'mangal_pandey_park', label: 'Mangal Pandey Park', sublabel: 'Barrackpore, West Bengal', lat: 22.7570, lng: 88.3530 },
+  { id: 'mangal_pandey_park', label: 'Mangal Pandey Park', sublabel: 'Barrackpore, West Bengal', lat: 22.7570, lng: 88.3490 },
+
+  // Whole Delhi (NCT & NCR) Premier Hubs & Student Zones
+  { id: 'cp_delhi', label: 'Connaught Place (Inner/Outer Circle)', sublabel: '🏛️ CENTRAL HUB • New Delhi, Delhi', lat: 28.6315, lng: 77.2167 },
+  { id: 'rajiv_chowk_delhi', label: 'Rajiv Chowk Metro Station', sublabel: '🚇 METRO INTERCHANGE • Connaught Place, Delhi', lat: 28.6328, lng: 77.2195 },
+  { id: 'india_gate_delhi', label: 'India Gate & Kartavya Path', sublabel: '🏛️ MONUMENT • New Delhi, Delhi', lat: 28.6129, lng: 77.2295 },
+  { id: 'du_north_campus', label: 'Delhi University North Campus', sublabel: '🎓 UNIVERSITY • Vishwavidyalaya, Delhi', lat: 28.6890, lng: 77.2100 },
+  { id: 'kamla_nagar_delhi', label: 'Kamla Nagar Market', sublabel: '🛍️ MARKET • North Delhi, Delhi', lat: 28.6800, lng: 77.2025 },
+  { id: 'hauz_khas_delhi', label: 'Hauz Khas Village & Deer Park', sublabel: '🌳 CAFE & HERITAGE • South Delhi, Delhi', lat: 28.5494, lng: 77.1960 },
+  { id: 'saket_citywalk', label: 'Select CITYWALK & Saket District', sublabel: '🛍️ SHOPPING HUB • Saket, South Delhi', lat: 28.5284, lng: 77.2193 },
+  { id: 'sarojini_nagar_delhi', label: 'Sarojini Nagar Market', sublabel: '🛍️ BAZAAR • South Delhi, Delhi', lat: 28.5778, lng: 77.1983 },
+  { id: 'ina_dilli_haat', label: 'INA Metro & Dilli Haat', sublabel: '🚇 METRO & CRAFTS • South Delhi, Delhi', lat: 28.5746, lng: 77.2098 },
+  { id: 'lajpat_nagar_delhi', label: 'Lajpat Nagar Central Market', sublabel: '🛍️ MARKET • South East Delhi, Delhi', lat: 28.5694, lng: 77.2435 },
+  { id: 'karol_bagh_delhi', label: 'Karol Bagh Metro & Market', sublabel: '🛍️ MARKET • Central West Delhi', lat: 28.6444, lng: 77.1906 },
+  { id: 'chandni_chowk_delhi', label: 'Chandni Chowk & Red Fort', sublabel: '🏛️ HERITAGE BAZAAR • Old Delhi', lat: 28.6562, lng: 77.2310 },
+  { id: 'kashmere_gate_hub', label: 'Kashmere Gate ISBT & Triple Metro', sublabel: '🚆 TRANSIT INTERCHANGE • North Delhi', lat: 28.6675, lng: 77.2285 },
+  { id: 'dwarka_sec21_delhi', label: 'Dwarka Sector 21 Metro Hub', sublabel: '🚇 METRO & AIRPORT LINE • South West Delhi', lat: 28.5522, lng: 77.0583 },
+  { id: 'vasant_kunj_delhi', label: 'Vasant Kunj Promenade & JNU', sublabel: '🎓 MALLS & CAMPUS • South Delhi', lat: 28.5402, lng: 77.1558 },
+  { id: 'iit_delhi_hub', label: 'IIT Delhi Campus (Hauz Khas)', sublabel: '🎓 INSTITUTE • South Delhi', lat: 28.5450, lng: 77.1926 },
+  { id: 'noida_sec18_delhi', label: 'Noida Sector 18 & Mall of India', sublabel: '🛍️ COMMERCIAL HUB • Noida NCR', lat: 28.5708, lng: 77.3261 },
+  { id: 'cyber_city_gurugram', label: 'DLF Cyber City & Rapid Metro', sublabel: '🏢 TECH CORRIDOR • Gurugram NCR', lat: 28.4950, lng: 77.0890 },
 
   // Metro Cities & Iconic Places
   { id: 'flurys_kol', label: 'Flurys', sublabel: '🍽️ CAFE • Park Street, Kolkata', lat: 22.5542, lng: 88.3520 },
   { id: 'peter_cat_kol', label: 'Peter Cat Restaurant', sublabel: '🍽️ RESTAURANT • Park Street, Kolkata', lat: 22.5545, lng: 88.3525 },
-  { id: 'cp_delhi', label: 'Connaught Place', sublabel: 'New Delhi, Delhi', lat: 28.6315, lng: 77.2167 },
   { id: 'marine_mumbai', label: 'Marine Drive', sublabel: 'Mumbai, Maharashtra', lat: 18.9438, lng: 72.8232 },
   { id: 'mg_road_blr', label: 'MG Road Metro', sublabel: '🚇 METRO STATION • Bengaluru, Karnataka', lat: 12.9756, lng: 77.6066 }
 ];
@@ -328,7 +351,7 @@ export const PlaceSearchInput: React.FC<PlaceSearchInputProps> = ({
           } catch (_) {}
 
           try {
-            const res2 = await fetch('http://ip-api.com/json/');
+            const res2 = await fetch('https://ip-api.com/json/');
             if (res2.ok) {
               const data2 = await res2.json();
               if (data2.lat && data2.lon) {

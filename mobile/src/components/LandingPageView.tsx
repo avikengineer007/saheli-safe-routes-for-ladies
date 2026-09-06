@@ -94,7 +94,7 @@ export const LandingPageView: React.FC<LandingPageViewProps> = ({
   return (
     <div className="space-y-10 py-2">
       {/* Hero Section */}
-      <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-950 via-slate-900 to-rose-950 text-white p-6 md:p-10 border border-rose-900/40 shadow-2xl space-y-6">
+      <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-950 via-slate-900 to-rose-950 text-white p-6 md:p-10 border border-rose-900/40 shadow-2xl space-y-6 animate-fade-slide-up">
         {/* Background glow effects */}
         <div className="absolute -top-24 -right-24 w-96 h-96 bg-red-600/20 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute -bottom-24 -left-24 w-96 h-96 bg-rose-600/15 rounded-full blur-3xl pointer-events-none" />
@@ -172,7 +172,7 @@ export const LandingPageView: React.FC<LandingPageViewProps> = ({
       </section>
 
       {/* Emergency Safety Contacts Directory Section */}
-      <section className="p-6 rounded-3xl bg-white border border-rose-200 shadow-xl space-y-6">
+      <section className="p-6 rounded-3xl bg-white border border-rose-200 shadow-xl space-y-6 animate-fade-slide-up-delay-1">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-rose-100 pb-4 gap-2">
           <div className="flex items-center space-x-3">
             <div className="w-10 h-10 rounded-2xl bg-red-600 text-white flex items-center justify-center font-bold shadow-md shadow-red-500/20">
@@ -248,7 +248,7 @@ export const LandingPageView: React.FC<LandingPageViewProps> = ({
       </section>
 
       {/* Architecture Capabilities Grid */}
-      <section className="p-6 rounded-3xl bg-white border border-rose-200 shadow-xl space-y-6">
+      <section className="p-6 rounded-3xl bg-white border border-rose-200 shadow-xl space-y-6 animate-fade-slide-up-delay-2">
         <div className="border-b border-rose-100 pb-3">
           <h2 className="text-lg font-black text-slate-900 uppercase tracking-tight flex items-center space-x-2">
             <ShieldCheck className="w-5 h-5 text-red-600" />
@@ -291,9 +291,9 @@ export const LandingPageView: React.FC<LandingPageViewProps> = ({
       </section>
 
       {/* Call to Action Banner */}
-      <section className="p-8 rounded-3xl bg-gradient-to-r from-red-600 via-rose-500 to-rose-600 text-white shadow-2xl flex flex-col md:flex-row items-center justify-between gap-6">
+      <section className="p-8 rounded-3xl bg-gradient-to-r from-red-600 via-rose-500 to-rose-600 text-white shadow-2xl flex flex-col md:flex-row items-center justify-between gap-6 animate-fade-slide-up-delay-3">
         <div className="space-y-1 text-center md:text-left">
-          <h3 className="text-xl font-black tracking-tight">Ready for a Safe Walk in Kolkata?</h3>
+          <h3 className="text-xl font-black tracking-tight">Ready for a Safe Walk Anywhere in India?</h3>
           <p className="text-xs text-rose-100 font-medium">Select your origin and destination to view turn-by-turn safe navigation guidance.</p>
         </div>
 

@@ -97,14 +97,20 @@ export class DeterministicSafetyScorer {
 
     // 3. Lighting Penalty
     const isUnlit = segment.isLit === false;
-    const lightingBase = isUnlit ? 1.0 : 0.0;
+    const isUnverified = segment.isLit === undefined;
+    // Verified unlit gets 1.0 base penalty; unverified/unmapped gets 0.35 cautious penalty; verified lit gets 0.0
+    const lightingBase = isUnlit ? 1.0 : (isUnverified ? 0.35 : 0.0);
     const lightingPenalty = weights.w3_unlit_street * lightingBase * nightMult;
     if (lightingPenalty > 0) {
-      reasons.push(
-        nightMult > 1.0 
-          ? `Unlit street segment at night (-${lightingPenalty.toFixed(1)})` 
-          : `Street lighting marked inadequate (-${lightingPenalty.toFixed(1)})`
-      );
+      if (isUnlit) {
+        reasons.push(
+          nightMult > 1.0 
+            ? `Unlit street segment at night (-${lightingPenalty.toFixed(1)})` 
+            : `Street lighting marked inadequate (-${lightingPenalty.toFixed(1)})`
+        );
+      } else if (isUnverified) {
+        reasons.push(`Street lighting unverified in OpenStreetMap registry (-${lightingPenalty.toFixed(1)})`);
+      }
     }
 
     // 4. Isolation Score Penalty (inverse of foot traffic / POI density)

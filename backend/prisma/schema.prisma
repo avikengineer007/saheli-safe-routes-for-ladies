@@ -73,3 +73,23 @@ model SafetyScoreCache {
   score       Float
   computedAt  DateTime @default(now())
 }
+
+model WalkFeedback {
+  id               String   @id @default(cuid())
+  journeyId        String?
+  safetyRating     Int      // 1 to 5
+  lightingAdequate Boolean
+  detourWorthIt    Boolean
+  notes            String?
+  createdAt        DateTime @default(now())
+}
+
+model OtpSession {
+  id        String   @id @default(cuid())
+  phone     String
+  otpHash   String
+  expiresAt DateTime
+  attempts  Int      @default(0)
+  createdAt DateTime @default(now())
+}
+

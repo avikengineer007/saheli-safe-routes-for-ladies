@@ -8,13 +8,6 @@ interface LiveJourneyViewProps {
   onSendPing: (lat: number, lng: number) => void;
   onTriggerSOS: () => void;
   onCompleteJourney: () => void;
-}
-
-interface LiveJourneyViewProps {
-  journey: ActiveJourney;
-  onSendPing: (lat: number, lng: number) => void;
-  onTriggerSOS: () => void;
-  onCompleteJourney: () => void;
   onOpenFamilyContacts?: () => void;
 }
 
@@ -29,6 +22,15 @@ export const LiveJourneyView: React.FC<LiveJourneyViewProps> = ({
   const [copiedLink, setCopiedLink] = useState(false);
   const [voiceEnabled, setVoiceEnabled] = useState(true);
   const [simStep, setSimStep] = useState(0);
+
+  // Safely parse saved family contacts once per render
+  const savedContacts = React.useMemo(() => {
+    try {
+      const raw = localStorage.getItem('saheli_family_contacts');
+      if (raw) return JSON.parse(raw) as Array<{ name?: string; phone: string; isPrimary?: boolean }>;
+    } catch (_) {}
+    return [];
+  }, []);
 
   // Web Speech API Voice Announcement
   const speakAlert = (text: string) => {
@@ -211,9 +213,9 @@ export const LiveJourneyView: React.FC<LiveJourneyViewProps> = ({
             <div>
               <div className="font-extrabold text-slate-900">Primary Family Emergency Contact</div>
               <div className="text-[11px] text-slate-500 font-medium">
-                {caregiverPhone || (localStorage.getItem('saheli_family_contacts') && JSON.parse(localStorage.getItem('saheli_family_contacts') || '[]').length > 0)
-                  ? (JSON.parse(localStorage.getItem('saheli_family_contacts') || '[]')[0]?.name ? `${JSON.parse(localStorage.getItem('saheli_family_contacts') || '[]')[0].name} (+91 ${JSON.parse(localStorage.getItem('saheli_family_contacts') || '[]')[0].phone})` : caregiverPhone)
-                  : 'No contact set yet'}
+                {savedContacts.length > 0 && savedContacts[0]?.name
+                  ? `${savedContacts[0].name} (+91 ${savedContacts[0].phone})`
+                  : caregiverPhone || 'No contact set yet'}
               </div>
             </div>
             {onOpenFamilyContacts ? (
